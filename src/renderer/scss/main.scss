@@ -80,8 +80,8 @@ option:checked {
   min-height: 0.8rem;
   position: relative;
 
-  > .mdi,
-  > .span {
+  >.mdi,
+  >.span {
     visibility: hidden;
   }
 
@@ -122,7 +122,7 @@ option:checked {
       font-size: 0.7rem;
       z-index: 1;
 
-      > div {
+      >div {
         padding: 0.1rem 0.2rem;
         min-width: -webkit-fill-available;
       }
@@ -171,7 +171,7 @@ option:checked {
         overflow: hidden;
         white-space: nowrap;
 
-        > div + div {
+        >div+div {
           padding-left: 0.6rem;
         }
       }
@@ -214,6 +214,7 @@ option:checked {
 
 /* Override */
 .modal {
+
   .modal-container,
   .modal-sm .modal-container {
     padding: 0;
@@ -298,6 +299,7 @@ option:checked {
 }
 
 .badge {
+
   &[data-badge],
   &:not([data-badge]) {
     &::after {
@@ -327,12 +329,16 @@ option:checked {
   height: auto;
 }
 
-.form-checkbox input:checked + .form-icon, .form-radio input:checked + .form-icon, .form-switch input:checked + .form-icon {
+.form-checkbox input:checked+.form-icon,
+.form-radio input:checked+.form-icon,
+.form-switch input:checked+.form-icon {
   background: var(--primary-color);
   border-color: var(--primary-color);
 }
 
-.form-checkbox input:focus + .form-icon, .form-radio input:focus + .form-icon, .form-switch input:focus + .form-icon {
+.form-checkbox input:focus+.form-icon,
+.form-radio input:focus+.form-icon,
+.form-switch input:focus+.form-icon {
   box-shadow: 0 0 0 0.1rem var(--primary-color-shadow);
   border-color: var(--primary-color);
 }
@@ -396,6 +402,7 @@ option:checked {
   &[type="file"] {
     overflow: hidden;
   }
+
   &:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 0.1rem var(--primary-color-shadow);
@@ -410,7 +417,7 @@ option:checked {
   font-size: 0.7rem;
 
   .menu-item {
-    + .menu-item {
+    +.menu-item {
       margin-top: 0;
     }
   }
@@ -457,8 +464,9 @@ option:checked {
 }
 
 .btn.loading {
-  > .mdi,
-  > span {
+
+  >.mdi,
+  >span {
     visibility: hidden;
   }
 }
@@ -475,7 +483,7 @@ option:checked {
     .menu-item {
       padding: 0;
 
-      > a {
+      >a {
         margin: 0.2rem;
         padding: 0.1rem 0.3rem;
 
@@ -493,6 +501,7 @@ option:checked {
     border-radius: $border-radius;
 
     .ace_marker-layer {
+
       .ace_active-line,
       .ace_line-hover {
         border-radius: $border-radius;
@@ -528,4 +537,76 @@ code.sql {
 
 .sql-hl-bracket {
   color: darkorchid;
+}
+
+/* Setting bar expanded styles */
+
+#settingbar {
+  &.expanded {
+
+    .settingbar-middle-elements {
+      .settingbar-elements {
+        width: calc($settingbar-width * 4 - 20px);
+      }
+    }
+
+    .settingbar-top-elements {
+      .settingbar-elements {
+        width: calc($settingbar-width * 4 - 20px);
+
+        .settingbar-element {
+          height: 1.5rem;
+
+          &.selected {
+            &::before {
+              height: 1.5rem;
+            }
+          }
+
+          .settingbar-element-icon-wrapper {
+            padding-left: 10px;
+
+            .dbi {
+              font-size: 12px;
+              width: 1rem;
+              height: 1rem;
+              display: flex;
+              padding-right: 1rem;
+            }
+
+            small {
+              flex-grow: 1;
+              font-size: 0.7rem;
+              text-align: left;
+            }
+
+            align-items: middle;
+            justify-content: start;
+            display: flex;
+            flex-flow: row;
+            flex-direction: row;
+          }
+        }
+
+        .folder-container {
+          &.opened {
+
+            .folder-element {
+              height: auto;
+              display: flex;
+              align-items: center;
+
+              small {
+                position: relative;
+                flex-grow: 1;
+                text-align: left;
+                font-size: .7rem;
+                margin-left: .3rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

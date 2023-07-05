@@ -35,6 +35,8 @@
                <SettingBarConnections
                   v-if="draggedElement && !foldersUid.includes(draggedElement)"
                   class="drag-area"
+                  :search-query="searchQuery"
+                  :is-expanded="isExpanded"
                   :class="[{'folder-preview': coveredElement === element.uid && draggedElement !== coveredElement}]"
                   :list="dummyNested"
                   @dragenter="coveredElement = element.uid"
@@ -59,13 +61,8 @@
                            :type="element.hasCustomIcon ? 'custom' : 'mdi'"
                            :size="36"
                         />
+                        <small class="settingbar-element-name">{{ element.name || getConnectionName(element.uid) }}</small>
                      </div>
-                     <div
-                        v-else
-                        class="settingbar-element-icon dbi"
-                        :class="[`dbi-${element.client}`, getStatusBadge(element.uid)]"
-                     />
-                     <small class="settingbar-element-name">{{ element.name || getConnectionName(element.uid) }}</small>
                   </div>
                </template>
             </div>
@@ -73,6 +70,8 @@
                v-else-if="element.isFolder"
                :key="`${element.uid}-${element.connections.length}`"
                :folder="element"
+               :search-query="searchQuery"
+               :is-expanded="isExpanded"
                :covered-element="coveredElement"
                :dragged-element="draggedElement"
                :folder-drag="folderDrag"
@@ -111,6 +110,14 @@ const props = defineProps({
    modelValue: {
       type: Array as PropType<SidebarElement[]>,
       default: () => []
+   },
+   searchQuery: {
+      type: String,
+      required: true
+   },
+   isExpanded: {
+      type: Boolean,
+      required: true
    }
 });
 
@@ -231,8 +238,4 @@ watch(() => props.modelValue, (value) => {
    }
 }
 
-.settingbar-element-icon {
-   display: flex;
-   color: $body-font-color-dark;
-}
 </style>
