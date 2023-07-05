@@ -38,7 +38,7 @@
                            <label class="form-label">{{ t('application.icon') }}</label>
                         </div>
                         <div class="col-9 icons-wrapper">
-                           <div
+                           <base-icon
                               v-for="icon in icons"
                               :key="icon.name"
                            >

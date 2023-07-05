@@ -429,3 +429,70 @@ option:checked {
     }
   }
 }
+
+
+/* Setting bar expanded styles */
+
+#settingbar {
+  &.expanded {
+
+    .settingbar-middle-elements {
+      .settingbar-elements {
+        width: calc($settingbar-width * 4 - 20px );
+      }
+    }
+    .settingbar-top-elements {
+    .settingbar-elements {
+        width: calc($settingbar-width * 4 - 20px );
+
+        .settingbar-element {
+          height: 1.5rem;
+
+          &.selected {
+            &::before {
+              height: 1.5rem;
+            }
+          }
+        .settingbar-element-icon-wrapper {
+          padding-left: 10px;
+          .dbi {
+            font-size: 12px;
+            width: 1rem;
+            height: 1rem;
+            display: flex;
+            padding-right: 1rem;
+          }
+          small {
+            flex-grow: 1;
+            font-size: 0.7rem;
+            text-align: left;
+          }
+          align-items: middle;
+          justify-content: start;
+          display: flex;
+          flex-flow: row;
+          flex-direction: row;
+        }
+      }
+        .folder-container {
+          &.opened {
+    
+          .folder-element { 
+              height: auto;
+              display: flex;
+              align-items: center;
+            small {
+              position: relative;
+              flex-grow: 1;
+              text-align: left;
+              font-size: .7rem;
+              margin-left: .3rem;
+             }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    
