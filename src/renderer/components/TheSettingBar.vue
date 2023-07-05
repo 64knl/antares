@@ -1,5 +1,26 @@
 <template>
-   <div id="settingbar">
+   <div
+      id="settingbar"
+      :class="{expanded: isExpanded}"
+   >
+      <div v-if="isExpanded" class="settingsbar-search">
+         <div class="input-group has-icon-right">
+            <input
+               id="searchConnections"
+               ref="searchInput"
+               v-model="searchQuery"
+               class="form-input input-sm"
+               type="text"
+               :placeholder="t('message.searchConnections')"
+            >
+            <i v-if="!searchQuery" class="form-icon mdi mdi-magnify mdi-18px" />
+            <i
+               v-else
+               class="form-icon c-hand mdi mdi-backspace mdi-18px pr-1"
+               @click="searchQuery = ''"
+            />
+         </div>
+      </div>
       <div ref="sidebarConnections" class="settingbar-top-elements">
          <SettingBarContext
             v-if="isContext"
@@ -10,6 +31,8 @@
          <ul class="settingbar-elements">
             <SettingBarConnections
                v-model="connectionsArr"
+               :search-query="searchQuery"
+               :is-expanded="isExpanded"
                @context="contextMenu"
             />
          </ul>
@@ -67,11 +90,32 @@
                class="settingbar-element btn btn-link"
                @click="showScratchpad()"
             >
+               <<<<<<< HEAD
                <BaseIcon
                   icon-name="mdiNotebookOutline"
                   class="settingbar-element-icon text-light"
+                  =="====="
+                  <base-icon
+                  icon="mdi-notebook-edit-outline"
                   :size="24"
                />
+            </li>
+            <li
+               v-tooltip="{
+                  strategy: 'fixed',
+                  placement: 'right',
+                  content: isExpanded ? t('message.collapseSettingsBar') : t('message.expandSettingsBar')
+               }"
+               class="settingbar-element btn btn-link"
+               @click="isExpanded = !isExpanded; searchQuery = ''"
+            >
+               <base-icon
+                  :icon="isExpanded ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
+               >
+                  >>>>>> a795830 (fix: use mariadb.org logo)
+                  :size="24"
+                  />
+               </base-icon>
             </li>
             <li
                v-tooltip="{
@@ -131,6 +175,8 @@ const emit = defineEmits(['show-connections-modal']);
 
 const sidebarConnections: Ref<HTMLDivElement> = ref(null);
 const isContext: Ref<boolean> = ref(false);
+const isExpanded: Ref<boolean> = ref(false);
+const searchQuery: Ref<string> = ref('');
 const isScrollable: Ref<boolean> = ref(false);
 const contextEvent: Ref<MouseEvent> = ref(null);
 const contextConnection: Ref<SidebarElement> = ref(null);
@@ -174,7 +220,7 @@ if (!connectionsArr.value.length)
 
 <style lang="scss">
 #settingbar {
-   width: $settingbar-width;
+   width: $settingbar-width * 4;
    height: calc(100vh - #{$excluding-size});
    display: flex;
    flex-direction: column;
@@ -182,6 +228,7 @@ if (!connectionsArr.value.length)
    align-items: center;
    padding: 0;
    z-index: 9;
+   transition: width 0.2s ease-in-out;
 
    .settingbar-top-elements {
       overflow-x: hidden;
@@ -305,6 +352,57 @@ if (!connectionsArr.value.length)
             }
          }
       }
+   }
+
+   // Search input
+   .settingsbar-search {
+      margin-top: 0.3rem;
+      padding: 0 5px 0;
+      input {
+         border-radius: .2rem;
+      }
+   }
+
+   &.expanded {
+
+     width: $settingbar-width * 4;
+
+     settingbar-top-elements
+     {
+      width: 100%;
+      .settingbar-elements {
+        width: 100%;
+        padding: 1rem;
+        box-sizing: border-box;
+    // width: calc( $settingbar-width * 4 - 1rem)
+    }
+    }
+
+      .settingbar-bottom-elements ul {
+         display: flex;
+         flex-direction: row;
+         width: $settingbar-width * 3;
+      }
+
+      // .settingbar-top-elements .settingbar-element {
+      //    width: 100%;
+      //    height: auto;
+      // }
+
+      // .settingbar-elements .settingbar-element {
+      //    .settingbar-element-icon-wrapper{
+      //       flex-direction:row;
+      //       justify-content: left;
+
+      //       .settingbar-element-name {
+      //          font-size: 100%;
+      //          width: $settingbar-width * 4;
+      //          max-width: 90%;
+      //          text-align: left;
+      //          padding-left: 1rem;
+      //       }
+      //    }
+      // }
    }
 }
 </style>

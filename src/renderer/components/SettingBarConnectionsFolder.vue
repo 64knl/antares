@@ -4,20 +4,20 @@
          strategy: 'fixed',
          placement: 'right',
          content: folder.name,
-         disabled: isOpen || !folder.name
+         disabled: showAsOpen || !folder.name
       }"
       class="settingbar-element folder btn btn-link p-1"
-      :class="[{ 'selected-inside': hasSelectedInside && !isOpen }]"
-      :style="isOpen ? `height: auto; opacity: 1;` : null"
+      :class="[{ 'selected-inside': hasSelectedInside && !showAsOpen }]"
+      :style="showAsOpen ? `height: auto; opacity: 1;` : null"
    >
       <Draggable
          class="folder-container"
          :item-key="((item: string) => localList.indexOf(item))"
-         :class="[{'opened': isOpen}]"
+         :class="[{'opened': showAsOpen}]"
          :style="[
             `background: ${folder.color};`,
-            isOpen ? `max-height: ${60*(folder.connections.length+1)}px` : 'max-height: 60px',
-            !isOpen || folderDrag ? `overflow: hidden;` : ''
+            showAsOpen ? `max-height: ${60*(folder.connections.length+1)}px` : 'max-height: 60px',
+            !showAsOpen || folderDrag ? `overflow: hidden;` : ''
          ]"
          :list="localList"
          ghost-class="ghost"
@@ -27,13 +27,13 @@
       >
          <template #header>
             <div
-               v-if="!isOpen"
+               v-if="!showAsOpen"
                class="folder-overlay"
                @click="openFolder"
                @contextmenu.stop="emit('context', {event: $event, content: folder})"
             />
             <div
-               v-if="isOpen"
+               v-if="showAsOpen"
                class="folder-icon"
                :style="`color: ${folder.color};`"
                @click="closeFolder"
@@ -79,7 +79,8 @@
                   class="folder-element-icon dbi"
                   :class="[`dbi-${getConnectionOrderByUid(element).client}`, getStatusBadge(element)]"
                />
-               <small v-if="isOpen" class="folder-element-name">{{ getConnectionOrderByUid(element)?.name || getConnectionName(element) }}</small>
+
+               <small v-if="showAsOpen" class="folder-element-name">{{ getConnectionOrderByUid(element)?.name || getConnectionName(element) }}</small>
             </div>
          </template>
       </Draggable>
@@ -88,6 +89,8 @@
          class="drag-area"
          :class="[{'folder-preview': coveredElement === folder.uid && draggedElement !== coveredElement}]"
          :list="dummyNested"
+         :search-query="searchQuery"
+         :is-expanded="isExpanded"
          :swap-threshold="1"
          @dragenter="emit('covered')"
          @dragleave="emit('uncovered')"
@@ -132,6 +135,14 @@ const props = defineProps({
    coveredElement: {
       type: [String, Boolean] as PropType<string | false>,
       required: true
+   },
+   searchQuery: {
+      type: String,
+      required: true
+   },
+   isExpanded: {
+      type: Boolean,
+      required: true
    }
 });
 
@@ -159,6 +170,9 @@ const addIntoFolder = ({ added }: {added: { element: SidebarElement }}) => {
    }
 };
 
+const showAsOpen = computed(() => {
+   return isOpen.value || props.searchQuery !== '';
+});
 const getStatusBadge = (uid: string) => {
    if (getWorkspace(uid)) {
       const status = getWorkspace(uid).connectionStatus;
