@@ -1,55 +1,60 @@
 <template>
-   <div class="connection-tabs d-flex flex-column">
+   <div v-if="getConnected.length > 1" class="connection-tabs d-flex flex-column">
       <button
          v-for="connectionItem in getConnected"
          :key="connectionItem"
+         :class="selectedWorkspace === connectionItem ? 'active' : ''"
          class="d-flex connection-tab"
       >
-         {{ getConnectionName(connectionItem) }}
+         <span @click="selectWorkspace( connectionItem)">
+            {{ getConnectionName(connectionItem) }}
+         </span>
+         <BaseIcon
+            icon="mdi-close"
+            :size="16"
+         />
       </button>
    </div>
 </template>
 
 <script setup lang="ts">
-import { ref, Ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useApplicationStore } from '@/stores/application';
-import { useConnectionsStore, SidebarElement } from '@/stores/connections';
+import BaseIcon from './BaseIcon.vue';
+import { useConnectionsStore } from '@/stores/connections';
 import { useWorkspacesStore } from '@/stores/workspaces';
-import { useElementBounding } from '@vueuse/core';
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-localStorage.setItem('opened-folders', '[]');
-
-const applicationStore = useApplicationStore();
 const connectionsStore = useConnectionsStore();
 const workspacesStore = useWorkspacesStore();
+const { selectWorkspace } = workspacesStore;
 
-const { isExpandedSettingBar } = storeToRefs(applicationStore);
+const { getSelected: selectedWorkspace } = storeToRefs(workspacesStore);
+
 const { getConnected } = storeToRefs(workspacesStore);
-const { connectionsOrder } = storeToRefs(connectionsStore);
-const { updateConnectionsOrder, initConnectionsOrder, getConnectionName } = connectionsStore;
-
-const sidebarConnections: Ref<HTMLDivElement> = ref(null);
+const { getConnectionName } = connectionsStore;
 
 </script>
 
 <style scoped lang="scss">
 .connection-tabs
 {
-    width: calc(100% - 3.5rem);
+    border-bottom: 1px solid #999;
 }
 .connection-tab
 {
     padding: .1rem .7rem;
-    border-left: 1px solid #c00;
-    font-size: .6rem;
+    border: none;
+    border-left: 1px solid #999;
+    background-color: #333;
+color : #fff;
+    font-size: .8rem;
     text-overflow: ellipsis;
     white-space: nowrap;
     flex-shrink: 1;
     &:first-child {
         border-left: none;
+    }
+    &.active {
+        background-color: #000;
     }
 }
 
