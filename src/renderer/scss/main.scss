@@ -446,7 +446,10 @@ option:checked {
         width: calc($settingbar-width * 4 - 20px );
 
         .settingbar-element {
-          height: 1.5rem;
+          height: 1.9rem;
+          .folder-info {
+            margin-top:.2rem;
+          }
 
           &.selected {
             &::before {
@@ -476,18 +479,19 @@ option:checked {
       }
         .folder-container {
           &.opened {
-    
-          .folder-element { 
+            .folder-element { 
               height: auto;
               display: flex;
-              align-items: center;
-            small {
-              position: relative;
-              flex-grow: 1;
-              text-align: left;
-              font-size: .7rem;
-              margin-left: .3rem;
-             }
+              align-items: left;
+              justify-content: left;
+              small {
+                position: relative;
+                max-width: calc($settingbar-width * 4 - 80px );
+                flex-grow: 1;
+                text-align: left;
+                font-size: .7rem;
+                margin-left: .3rem;
+              }
             }
           }
         }

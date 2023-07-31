@@ -11,7 +11,7 @@
    >
       <template #item="{ element }">
          <li
-            v-if="element.isFolder || !folderedConnections.includes(element.uid)"
+            v-if="(element.isFolder || !folderedConnections.includes(element.uid)) && element.hidden !== true"
             :draggable="true"
             :class="{'folder': element.isFolder}"
             @dragstart="draggedElement = element.uid"
@@ -36,7 +36,6 @@
                   v-if="draggedElement && !foldersUid.includes(draggedElement)"
                   class="drag-area"
                   :search-query="searchQuery"
-                  :is-expanded="isExpanded"
                   :class="[{'folder-preview': coveredElement === element.uid && draggedElement !== coveredElement}]"
                   :list="dummyNested"
                   @dragenter="coveredElement = element.uid"
@@ -70,7 +69,7 @@
                :key="`${element.uid}-${element.connections.length}`"
                :folder="element"
                :search-query="searchQuery"
-               :is-expanded="isExpanded"
+               :is-expanded="isExpandedSettingBar"
                :covered-element="coveredElement"
                :dragged-element="draggedElement"
                :folder-drag="folderDrag"
@@ -97,9 +96,11 @@ import { useWorkspacesStore } from '@/stores/workspaces';
 
 const workspacesStore = useWorkspacesStore();
 const connectionsStore = useConnectionsStore();
+const applicationStore = useApplicationStore();
 
 const { getSelected: selectedWorkspace } = storeToRefs(workspacesStore);
 const { getFolders: folders } = storeToRefs(connectionsStore);
+const { isExpandedSettingBar } = storeToRefs(applicationStore);
 
 const { getWorkspace, selectWorkspace } = workspacesStore;
 const { getConnectionName, addFolder } = connectionsStore;
@@ -111,10 +112,6 @@ const props = defineProps({
    },
    searchQuery: {
       type: String,
-      required: true
-   },
-   isExpanded: {
-      type: Boolean,
       required: true
    }
 });
