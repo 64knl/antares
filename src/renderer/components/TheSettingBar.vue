@@ -1,9 +1,9 @@
 <template>
    <div
       id="settingbar"
-      :class="{expanded: isExpanded}"
+      :class="{expanded: isExpandedSettingBar}"
    >
-      <div v-if="isExpanded" class="settingsbar-search">
+      <div v-if="isExpandedSettingBar" class="settingbar-search">
          <div class="input-group has-icon-right">
             <input
                id="searchConnections"
@@ -32,7 +32,6 @@
             <SettingBarConnections
                v-model="connectionsArr"
                :search-query="searchQuery"
-               :is-expanded="isExpanded"
                @context="contextMenu"
             />
          </ul>
@@ -101,22 +100,38 @@
                />
             </li>
             <li
+               v-if="isExpandedSettingBar === true"
                v-tooltip="{
                   strategy: 'fixed',
                   placement: 'right',
-                  content: isExpanded ? t('message.collapseSettingsBar') : t('message.expandSettingsBar')
+                  content: t('message.collapseSettingsBar')
                }"
                class="settingbar-element btn btn-link"
-               @click="isExpanded = !isExpanded; searchQuery = ''"
+               @click="hideExpandedSettingBar(); searchQuery = ''"
             >
-               <base-icon
+               <BaseIcon
                   :icon="isExpanded ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
-               >
-                  >>>>>> a795830 (fix: use mariadb.org logo)
                   :size="24"
-                  />
+               />
                </base-icon>
             </li>
+
+            <li
+               v-else
+               v-tooltip="{
+                  strategy: 'fixed',
+                  placement: 'right',
+                  content: t('message.expandSettingsBar')
+               }"
+               class="settingbar-element btn btn-link"
+               @click="showExpandedSettingBar(); searchQuery = ''"
+            >
+               <base-icon
+                  icon="mdi-arrow-expand"
+                  :size="24"
+               />
+            </li>
+
             <li
                v-tooltip="{
                   strategy: 'fixed',
@@ -163,19 +178,18 @@ const applicationStore = useApplicationStore();
 const connectionsStore = useConnectionsStore();
 const workspacesStore = useWorkspacesStore();
 
-const { updateStatus } = storeToRefs(applicationStore);
+const { updateStatus, isExpandedSettingBar } = storeToRefs(applicationStore);
 const { getSelected: selectedWorkspace } = storeToRefs(workspacesStore);
 const { connectionsOrder } = storeToRefs(connectionsStore);
 
-const { showSettingModal, showScratchpad } = applicationStore;
-const { updateConnectionsOrder, initConnectionsOrder } = connectionsStore;
+const { showSettingModal, showScratchpad, showExpandedSettingBar, hideExpandedSettingBar } = applicationStore;
+const { updateConnectionsOrder, initConnectionsOrder, getConnectionName } = connectionsStore;
 const { selectWorkspace } = workspacesStore;
 
 const emit = defineEmits(['show-connections-modal']);
 
 const sidebarConnections: Ref<HTMLDivElement> = ref(null);
 const isContext: Ref<boolean> = ref(false);
-const isExpanded: Ref<boolean> = ref(false);
 const searchQuery: Ref<string> = ref('');
 const isScrollable: Ref<boolean> = ref(false);
 const contextEvent: Ref<MouseEvent> = ref(null);
@@ -183,7 +197,35 @@ const contextConnection: Ref<SidebarElement> = ref(null);
 const sidebarConnectionsHeight = ref(useElementBounding(sidebarConnections)?.height);
 
 const connectionsArr = computed({
-   get: () => connectionsOrder.value,
+   get: () => {
+      // First filter matches
+      return connectionsOrder.value.map(d => {
+         if (d.isFolder) {
+            if (d.name && d.name.toLowerCase().includes(searchQuery.value.toLowerCase())) {
+               d.hidden = false;
+               // TODO: force show all items in folder.
+               return d;
+            }
+
+            let showFolder = false;
+
+            d.connections.forEach(d => {
+               if (getConnectionName(d).toLowerCase().includes(searchQuery.value.toLowerCase()))
+                  showFolder = true;
+            });
+            d.hidden = !showFolder;
+            return d;
+         }
+         else {
+            if (getConnectionName(d.uid).toLowerCase().includes(searchQuery.value.toLowerCase()))
+               d.hidden = false;
+            else
+               d.hidden = true;
+            return d;
+         }
+      });
+   },
+
    set: (value: SidebarElement[]) => {
       updateConnectionsOrder(value);
    }
@@ -355,9 +397,10 @@ if (!connectionsArr.value.length)
    }
 
    // Search input
-   .settingsbar-search {
+   .settingbar-search {
       margin-top: 0.3rem;
       padding: 0 5px 0;
+      width: 100%;
       input {
          border-radius: .2rem;
       }

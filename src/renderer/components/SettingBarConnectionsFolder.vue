@@ -7,7 +7,7 @@
          disabled: showAsOpen || !folder.name
       }"
       class="settingbar-element folder btn btn-link p-1"
-      :class="[{ 'selected-inside': hasSelectedInside && !showAsOpen }]"
+      :class="[{ 'selected-inside': hasSelectedInside && !showAsOpen, 'expanded' : isExpandedSettingBar }]"
       :style="showAsOpen ? `height: auto; opacity: 1;` : null"
    >
       <Draggable
@@ -31,9 +31,15 @@
                class="folder-overlay"
                @click="openFolder"
                @contextmenu.stop="emit('context', {event: $event, content: folder})"
-            />
+            >
+               <div v-if="isExpandedSettingBar" class="folder-info d-flex flex mr-4 ml-4">
+                  <i class="folder-icon-close mdi mdi-folder mdi-16px mr-2" />
+
+                  <span v-if="folder.name ">{{ folder.name }}</span><span v-else>Connections</span>
+               </div>
+            </div>
             <div
-               v-if="showAsOpen"
+               v-else
                class="folder-icon"
                :style="`color: ${folder.color};`"
                @click="closeFolder"
@@ -58,7 +64,6 @@
                   placement: 'right',
                   content: getConnectionName(element)
                }"
-               class="folder-element"
                :class="{ 'selected': element === selectedWorkspace }"
                @click="emit('select-workspace', element)"
                @contextmenu.stop="emit('context', {event: $event, content: getConnectionOrderByUid(element)})"
@@ -81,6 +86,14 @@
                />
 
                <small v-if="showAsOpen" class="folder-element-name">{{ getConnectionOrderByUid(element)?.name || getConnectionName(element) }}</small>
+               <div v-if="!isExpandedSettingBar || showAsOpen" class="folder-element">
+                  <base-icon
+                     :icon="getConnectionOrderByUid(element)?.icon ? `mdi ${getConnectionOrderByUid(element).icon}`: `dbi-${getConnectionOrderByUid(element)?.client}`"
+                     :size="!showAsOpen || isExpandedSettingBar ? 20: 36"
+                     :badge-status="getStatusBadge(element)"
+                  />
+                  <small v-if="showAsOpen" class="folder-element-name">{{ getConnectionOrderByUid(element)?.name || getConnectionName(element) }}</small>
+               </div>
             </div>
          </template>
       </Draggable>
@@ -90,7 +103,6 @@
          :class="[{'folder-preview': coveredElement === folder.uid && draggedElement !== coveredElement}]"
          :list="dummyNested"
          :search-query="searchQuery"
-         :is-expanded="isExpanded"
          :swap-threshold="1"
          @dragenter="emit('covered')"
          @dragleave="emit('uncovered')"
@@ -110,12 +122,14 @@ import { useWorkspacesStore } from '@/stores/workspaces';
 
 const workspacesStore = useWorkspacesStore();
 const connectionsStore = useConnectionsStore();
+const applicationStore = useApplicationStore();
 
 const { getFolders: folders } = storeToRefs(connectionsStore);
 const { getSelected: selectedWorkspace } = storeToRefs(workspacesStore);
 
 const { getWorkspace } = workspacesStore;
 const { getConnectionOrderByUid, getConnectionName, addToFolder } = connectionsStore;
+const { isExpandedSettingBar } = storeToRefs(applicationStore);
 
 const foldersOpened = JSON.parse(localStorage.getItem('opened-folders')) || [];
 
@@ -138,10 +152,6 @@ const props = defineProps({
    },
    searchQuery: {
       type: String,
-      required: true
-   },
-   isExpanded: {
-      type: Boolean,
       required: true
    }
 });
@@ -495,4 +505,14 @@ emit('folder-sort');// To apply changes on component key change
       }
    }
 }
+
+.expanded {
+.folder-container {
+
+   &.opened {
+      .folder-icon{
+         height: auto !important;
+   }
+}}}
+
 </style>
