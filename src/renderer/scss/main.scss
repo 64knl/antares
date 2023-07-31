@@ -555,7 +555,11 @@ code.sql {
         width: calc($settingbar-width * 4 - 20px);
 
         .settingbar-element {
-          height: 1.5rem;
+          height: 1.9rem;
+
+          .folder-info {
+            margin-top: .2rem;
+          }
 
           &.selected {
             &::before {
@@ -590,14 +594,15 @@ code.sql {
 
         .folder-container {
           &.opened {
-
             .folder-element {
               height: auto;
               display: flex;
-              align-items: center;
+              align-items: left;
+              justify-content: left;
 
               small {
                 position: relative;
+                max-width: calc($settingbar-width * 4 - 80px);
                 flex-grow: 1;
                 text-align: left;
                 font-size: .7rem;

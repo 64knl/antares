@@ -4,6 +4,9 @@
       <div id="window-content">
          <TheSettingBar @show-connections-modal="isAllConnectionsModal = true" />
          <div id="main-content" class="container">
+            <TheConnectionTabs
+               v-if="isExpandedSettingBar"
+            />
             <div class="columns col-gapless">
                <Workspace
                   v-for="connection in connections"
@@ -59,6 +62,7 @@ const ModalSettings = defineAsyncComponent(() => import(/* webpackChunkName: "Mo
 const ModalAllConnections = defineAsyncComponent(() => import(/* webpackChunkName: "ModalAllConnections" */'@/components/ModalAllConnections.vue'));
 const TheScratchpad = defineAsyncComponent(() => import(/* webpackChunkName: "TheScratchpad" */'@/components/TheScratchpad.vue'));
 const BaseTextEditor = defineAsyncComponent(() => import(/* webpackChunkName: "BaseTextEditor" */'@/components/BaseTextEditor.vue'));
+const TheConnectionTabs = defineAsyncComponent(() => import(/* webpackChunkName: "TheConnectionTabs" */'@/components/TheConnectionTabs.vue'));
 
 const applicationStore = useApplicationStore();
 const connectionsStore = useConnectionsStore();
@@ -72,6 +76,7 @@ const {
 const { connections } = storeToRefs(connectionsStore);
 const { applicationTheme, disableBlur } = storeToRefs(settingsStore);
 const { getSelected: selectedWorkspace } = storeToRefs(workspacesStore);
+const { isExpandedSettingBar } = storeToRefs(applicationStore);
 
 const { checkVersionUpdate } = applicationStore;
 const { changeApplicationTheme } = settingsStore;
