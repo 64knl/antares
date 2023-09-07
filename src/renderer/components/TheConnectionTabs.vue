@@ -1,5 +1,5 @@
 <template>
-   <div v-if="getConnected.length > 1" class="connection-tabs d-flex flex-column">
+   <div class="connection-tabs d-flex flex-column">
       <button
          v-for="connectionItem in getConnected"
          :key="connectionItem"
@@ -10,9 +10,16 @@
             {{ getConnectionName(connectionItem) }}
          </span>
          <BaseIcon
+            v-if="selectedWorkspace === connectionItem"
             icon="mdi-close"
             :size="16"
          />
+      </button>
+      <button
+         v-if="selectedWorkspace!=='NEW'"
+         class="d-flex connection-tab"
+      >
+         Add connection
       </button>
    </div>
 </template>
@@ -37,14 +44,17 @@ const { getConnectionName } = connectionsStore;
 <style scoped lang="scss">
 .connection-tabs
 {
-    border-bottom: 1px solid #999;
+    border-bottom: 1px solid #3f3f3f;
 }
 .connection-tab
 {
-    padding: .1rem .7rem;
-    border: none;
-    border-left: 1px solid #999;
-    background-color: #333;
+   &:hover {
+   background-color: #222;
+   }
+    span {padding: .2rem .7rem;
+    }border: none;
+    border-left: 1px solid #3f3f3f;
+    background-color: #000;
 color : #fff;
     font-size: .8rem;
     text-overflow: ellipsis;
@@ -54,7 +64,7 @@ color : #fff;
         border-left: none;
     }
     &.active {
-        background-color: #000;
+        background-color: #333;
     }
 }
 
