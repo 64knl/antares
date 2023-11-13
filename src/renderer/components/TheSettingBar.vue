@@ -90,14 +90,8 @@
                class="settingbar-element btn btn-link"
                @click="showScratchpad"
             >
-               <<<<<<< HEAD
                <BaseIcon
-                  icon-name="mdiNotebookEditOutline"
                   class="settingbar-element-icon text-light"
-                  =="====="
-                  <base-icon
-                  icon="mdi-notebook-edit-outline"
-                  :size="24"
                />
             </li>
             <li
@@ -111,10 +105,9 @@
                @click="hideExpandedSettingBar(); searchQuery = ''"
             >
                <BaseIcon
-                  :icon="isExpanded ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
-                  :size="24"
-               />
-               </base-icon>
+
+                  class="settingbar-element-icon text-light"
+               /><!--:icon="isExpandedSettingBar ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"-->
             </li>
 
             <li
@@ -127,10 +120,10 @@
                class="settingbar-element btn btn-link"
                @click="showExpandedSettingBar(); searchQuery = ''"
             >
-               <base-icon
-                  icon="mdi-arrow-expand"
-                  :size="24"
+               <BaseIcon
+                  :icon="isExpandedSettingBar ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
                />
+               <!--              icon="mdi-arrow-expand" -->
             </li>
 
             <li
