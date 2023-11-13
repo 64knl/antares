@@ -90,7 +90,9 @@
                @click="showScratchpad()"
             >
                <BaseIcon
+                  icon-name="mdiNotebook"
                   class="settingbar-element-icon text-light"
+                  :size="24"
                />
             </li>
             <li
@@ -104,9 +106,9 @@
                @click="hideExpandedSettingBar(); searchQuery = ''"
             >
                <BaseIcon
-
-                  class="settingbar-element-icon text-light"
-               /><!--:icon="isExpandedSettingBar ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"-->
+                  :icon-name="isExpandedSettingBar ? 'mdiArrowCollapse' : 'mdiArrowExpand'"
+                  :size="24"
+               />
             </li>
 
             <li
@@ -120,9 +122,9 @@
                @click="showExpandedSettingBar(); searchQuery = ''"
             >
                <BaseIcon
-                  :icon="isExpandedSettingBar ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
+                  :icon-name="isExpandedSettingBar ? 'mdiArrowCollapse' : 'mdiArrowExpand'"
+                  :size="24"
                />
-               <!--              icon="mdi-arrow-expand" -->
             </li>
 
             <li
