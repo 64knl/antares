@@ -4,9 +4,7 @@
       <div id="window-content">
          <TheSettingBar @show-connections-modal="isAllConnectionsModal = true" />
          <div id="main-content" class="container">
-            <TheConnectionTabs
-               v-if="isExpandedSettingBar"
-            />
+            <TheConnectionTabs />
             <div class="columns col-gapless">
                <Workspace
                   v-for="connection in connections"
@@ -238,11 +236,11 @@ window.addEventListener('error', (event) => {
   #main-content {
     padding: 0;
     justify-content: flex-start;
-    height: calc(100vh - #{$excluding-size});
+    height: calc(100vh - 5rem);// #{$excluding-size});
     width: calc(100% - #{$settingbar-width});
 
     > .columns {
-      height: calc(100vh - #{$footer-height});
+      height: calc(100vh - 5rem);//#{$footer-height});
     }
 
     .connection-panel-wrapper {
