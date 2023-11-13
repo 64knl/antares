@@ -65,7 +65,10 @@ export const enUS = {
       actionSuccessful: '{action} successful',
       outputFormat: 'Output format',
       singleFile: 'Single {ext} file',
-      zipCompressedFile: 'ZIP compressed {ext} file'
+      zipCompressedFile: 'ZIP compressed {ext} file',
+      expandSettingsBar: 'Expand bookmarks',
+      collapseSettingsBar: 'Collapse bookmarks',
+      searchConnections: 'Search connections'
    },
    connection: { // Database connection
       connectionName: 'Connection name',
