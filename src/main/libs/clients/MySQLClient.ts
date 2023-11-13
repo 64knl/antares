@@ -151,6 +151,7 @@ export class MySQLClient extends BaseClient {
          supportBigNumbers: true,
          bigNumberStrings: true
       };
+
       if (this._params.schema?.length) dbConfig.database = this._params.schema;
 
       if (this._params.ssl) dbConfig.ssl = this._params.ssl;
@@ -159,7 +160,7 @@ export class MySQLClient extends BaseClient {
          try {
             if (this._params.ssh.password === '') delete this._params.ssh.password;
             if (this._params.ssh.passphrase === '') delete this._params.ssh.passphrase;
-            console.log(this._params.ssh);
+
             this._ssh = new SSH2Promise({
                ...this._params.ssh,
                reconnect: true,

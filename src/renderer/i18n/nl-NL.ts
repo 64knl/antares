@@ -340,7 +340,7 @@ export const nlNL = {
       deleteShortcut: 'Verwijder snelkoppeling',
       restoreDefaults: 'Herstel standaardwaarden',
       restoreDefaultsQuestion: 'Weet je zeker dat je de standaardwaarden wilt herstellen?',
-      registerAShortcut: 'Registreer een snelkoppeling',
+      registerAShortcut: 'Register a shortcut',
       invalidShortcutMessage: 'Invalid combination, continue to type',
       shortcutAlreadyExists: 'Snelkoppeling bestaat al',
       saveContent: 'Save content',
@@ -412,7 +412,7 @@ export const nlNL = {
    faker: {
       address: 'Adres',
       commerce: 'Commerce',
-      company: 'Bedrijf',
+      company: 'Company',
       database: 'Database',
       date: 'Datum',
       finance: 'Finance',
