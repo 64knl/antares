@@ -2,7 +2,6 @@ import * as antares from 'common/interfaces/antares';
 import { ipcMain } from 'electron';
 import * as fs from 'fs';
 import { SslOptions } from 'mysql2';
-import { privateDecrypt } from 'crypto';
 
 import { ClientsFactory } from '../libs/ClientsFactory';
 import { validateSender } from '../libs/misc/validateSender';
@@ -69,7 +68,6 @@ export default (connections: Record<string, antares.Client>) => {
             passphrase: conn.sshPassphrase,
             keepaliveInterval: conn.sshKeepAliveInterval ? conn.sshKeepAliveInterval*1000 : undefined
          };
-         console.log(privateKey);
       }
 
       try {

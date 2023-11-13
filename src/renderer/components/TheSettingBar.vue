@@ -11,7 +11,7 @@
                v-model="searchQuery"
                class="form-input input-sm"
                type="text"
-               :placeholder="t('message.searchConnections')"
+               :placeholder="t('general.searchConnections')"
             >
             <i v-if="!searchQuery" class="form-icon mdi mdi-magnify mdi-18px" />
             <i
@@ -90,7 +90,7 @@
                @click="showScratchpad()"
             >
                <BaseIcon
-                  icon-name="mdiNotebook"
+                  icon-name="mdiNotebookEditOutline"
                   class="settingbar-element-icon text-light"
                   :size="24"
                />
@@ -100,7 +100,7 @@
                v-tooltip="{
                   strategy: 'fixed',
                   placement: 'right',
-                  content: t('message.collapseSettingsBar')
+                  content: t('general.collapseSettingsBar')
                }"
                class="settingbar-element btn btn-link"
                @click="hideExpandedSettingBar(); searchQuery = ''"
@@ -116,7 +116,7 @@
                v-tooltip="{
                   strategy: 'fixed',
                   placement: 'right',
-                  content: t('message.expandSettingsBar')
+                  content: t('general.expandSettingsBar')
                }"
                class="settingbar-element btn btn-link"
                @click="showExpandedSettingBar(); searchQuery = ''"

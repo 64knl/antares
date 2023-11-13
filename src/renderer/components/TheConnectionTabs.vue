@@ -7,28 +7,39 @@
          class="d-flex connection-tab"
       >
          <span @click="selectWorkspace( connectionItem)">
+            <BaseIcon
+               :icon-name="camelize( getConnectionOrderByUid(connectionItem)?.icon ?? 'mdiDatabase')"
+               :size="12"
+               class="mr-1"
+            />
             {{ getConnectionName(connectionItem) }}
+
          </span>
          <BaseIcon
             v-if="selectedWorkspace === connectionItem"
-            icon="mdi-close"
+            icon-name="mdiClose"
             :size="16"
+            class="inline-block"
          />
       </button>
       <button
          v-if="selectedWorkspace!=='NEW'"
          class="d-flex connection-tab"
       >
-         Add connection
+         {{ t('connection.addConnection') }}
       </button>
    </div>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import BaseIcon from './BaseIcon.vue';
+import { useI18n } from 'vue-i18n';
+
+import BaseIcon from '@/components/BaseIcon.vue';
 import { useConnectionsStore } from '@/stores/connections';
 import { useWorkspacesStore } from '@/stores/workspaces';
+
+const { t } = useI18n();
 
 const connectionsStore = useConnectionsStore();
 const workspacesStore = useWorkspacesStore();
@@ -37,7 +48,17 @@ const { selectWorkspace } = workspacesStore;
 const { getSelected: selectedWorkspace } = storeToRefs(workspacesStore);
 
 const { getConnected } = storeToRefs(workspacesStore);
-const { getConnectionName } = connectionsStore;
+const { getConnectionOrderByUid, getConnectionName } = connectionsStore;
+
+const camelize = (text: string) => {
+   const textArr = text.split('-');
+   for (let i = 0; i < textArr.length; i++) {
+      if (i === 0) continue;
+      textArr[i] = textArr[i].charAt(0).toUpperCase() + textArr[i].slice(1);
+   }
+
+   return textArr.join('');
+};
 
 </script>
 
@@ -48,6 +69,7 @@ const { getConnectionName } = connectionsStore;
 }
 .connection-tab
 {
+   align-items: center;
    &:hover {
    background-color: #222;
    }
@@ -66,6 +88,10 @@ color : #fff;
     &.active {
         background-color: #333;
     }
-}
+    inline-block {
+         vertical-align: middle;
+         display: inline-block;
+    }
+   }
 
 </style>
