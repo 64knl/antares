@@ -65,7 +65,10 @@ export const nlNL = {
       outputFormat: 'Uitvoerformaat',
       singleFile: 'Enkel {ext}-bestand',
       zipCompressedFile: 'ZIP gecomprimeerd {ext}-bestand',
-      include: 'Inclusief'
+      include: 'Inclusief',
+      expandSettingsBar: 'Expand bookmarks',
+      collapseSettingsBar: 'Collapse bookmarks',
+      searchConnections: 'Doorzoek favorieten'
    },
    connection: {
       connectionName: 'Naam verbinding',
@@ -260,7 +263,8 @@ export const nlNL = {
       targetTable: 'Doeltabel',
       switchDatabase: 'Wissel van database',
       importQueryErrors: 'Waarschuwing: {n} fout is opgetreden | Waarschuwing: {n} fouten opgetreden',
-      executedQueries: '{n} query uitgevoerd | {n} queries uitgevoerd'
+      executedQueries: '{n} query uitgevoerd | {n} queries uitgevoerd',
+      searchForElements: 'Doorzoek schema'
    },
    application: {
       settings: 'Instellingen',

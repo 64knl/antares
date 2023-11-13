@@ -75,12 +75,9 @@ export const enUS = {
       outputFormat: 'Output format',
       singleFile: 'Single {ext} file',
       zipCompressedFile: 'ZIP compressed {ext} file',
-      copyName: 'Copy name',
-      search: 'Search',
-      title: 'Title',
-      archive: 'Archive', // verb
-      undo: 'Undo',
-      moveTo: 'Move to'
+      expandSettingsBar: 'Expand bookmarks',
+      collapseSettingsBar: 'Collapse bookmarks',
+      searchConnections: 'Search connections'
    },
    connection: { // Database connection
       connection: 'Connection',

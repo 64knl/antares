@@ -79,19 +79,20 @@
                      :size="36"
                   />
                </div>
-               <div
+               <!--<div
                   v-else
                   class="folder-element-icon dbi"
                   :class="[`dbi-${getConnectionOrderByUid(element).client}`, getStatusBadge(element)]"
-               />
+               />-->
 
                <small v-if="showAsOpen" class="folder-element-name">{{ getConnectionOrderByUid(element)?.name || getConnectionName(element) }}</small>
                <div v-if="!isExpandedSettingBar || showAsOpen" class="folder-element">
                   <base-icon
-                     :icon="getConnectionOrderByUid(element)?.icon ? `mdi ${getConnectionOrderByUid(element).icon}`: `dbi-${getConnectionOrderByUid(element)?.client}`"
+                     icon-name="camelize(getConnectionOrderByUid(element).icon)"
                      :size="!showAsOpen || isExpandedSettingBar ? 20: 36"
                      :badge-status="getStatusBadge(element)"
                   />
+                  {{ getConnectionOrderByUid(element).icon }}
                   <small v-if="showAsOpen" class="folder-element-name">{{ getConnectionOrderByUid(element)?.name || getConnectionName(element) }}</small>
                </div>
             </div>
