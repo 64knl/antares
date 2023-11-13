@@ -91,6 +91,7 @@ import * as Draggable from 'vuedraggable';
 
 import BaseIcon from '@/components/BaseIcon.vue';
 import SettingBarConnectionsFolder from '@/components/SettingBarConnectionsFolder.vue';
+import { useApplicationStore } from '@/stores/application';
 import { SidebarElement, useConnectionsStore } from '@/stores/connections';
 import { useWorkspacesStore } from '@/stores/workspaces';
 
