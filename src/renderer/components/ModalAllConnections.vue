@@ -58,10 +58,7 @@
                         <div class="panel">
                            <div class="panel-header p-2 text-center p-relative">
                               <figure class="avatar avatar-lg pt-1 mb-1">
-                                 <base-icon
-                                    :icon="`dbi-${connection.client}`"
-                                    :size="36"
-                                 />
+                                 <i class="settingbar-element-icon dbi" :class="[`dbi-${connection.client}`]" />
                               </figure>
                               <div class="panel-title h6 text-ellipsis">
                                  {{ getConnectionName(connection.uid) }}

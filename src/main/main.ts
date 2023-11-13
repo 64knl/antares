@@ -126,7 +126,7 @@ else {
          mainWindow.show();
 
       // if (isDevelopment)
-      mainWindow.webContents.openDevTools();
+      //    mainWindow.webContents.openDevTools();
 
       // const key = safeStorage.encryptString('godisnothere');
       // console.log('KEY:', key.toString('hex'));
