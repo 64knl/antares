@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.20-beta.2](https://github.com/antares-sql/antares/compare/v0.7.20-beta.1...v0.7.20-beta.2) (2023-12-06)
+
+
+### Bug Fixes
+
+* communication with worker thread not working ([6a72f6b](https://github.com/antares-sql/antares/commit/6a72f6b4ae3f4c1d6c42ca7a817d2f2c135696a7))
+
+### [0.7.20-beta.1](https://github.com/antares-sql/antares/compare/v0.7.20-beta.0...v0.7.20-beta.1) (2023-12-02)
+
+
+### Features
+
+* copy element names on sidebar from context menu, closes [#718](https://github.com/antares-sql/antares/issues/718) ([f13d4e6](https://github.com/antares-sql/antares/commit/f13d4e6dceb70b0c7cb8d56ddfb5f00e938571cc))
+* logging errors on log file ([315d9d8](https://github.com/antares-sql/antares/commit/315d9d84c2caa29852d68bd189750b2a4028d953))
+
+
+### Bug Fixes
+
+* **Flatpak:** import/export schema not working ([e26809f](https://github.com/antares-sql/antares/commit/e26809f260099ba194bf5d00671cae14d438197b))
+
+### [0.7.20-beta.0](https://github.com/antares-sql/antares/compare/v0.7.19...v0.7.20-beta.0) (2023-11-15)
+
+
+### Features
+
+* ability to open multiple app sessions ([075f542](https://github.com/antares-sql/antares/commit/075f542dc8f4a48bef07b86b78c40d03fcdccc56))
+* nl string updates ([8628711](https://github.com/antares-sql/antares/commit/8628711374269c29c4b1e6722fe66b0d8179477e))
+* **translation:** add Ukrainian language, thanks to [#707](https://github.com/antares-sql/antares/issues/707) ([e14302b](https://github.com/antares-sql/antares/commit/e14302bdc0038b84a1a06089753205149cd1a92b))
+
+
+### Bug Fixes
+
+* error with multiple sessions in non-dev environment ([169f610](https://github.com/antares-sql/antares/commit/169f610b2ee4857661ec3da7f04b628fec21f1f0))
+* **Firebird SQL:** error "Cannot read properties of null" connecting to some databases, fixes [#708](https://github.com/antares-sql/antares/issues/708) ([186fc18](https://github.com/antares-sql/antares/commit/186fc18363b6f14678465a8e38d85b1319e47b50))
+* missing open folder icon for trigger, function and other database elements on sidebar ([1bc95b0](https://github.com/antares-sql/antares/commit/1bc95b0c2cd91bbf0410a23266e23bbbf2a71995))
+
 ### [0.7.19](https://github.com/antares-sql/antares/compare/v0.7.19-beta.2...v0.7.19) (2023-11-01)
 
 

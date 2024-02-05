@@ -1,17 +1,14 @@
-import { ChildProcess, fork } from 'child_process';
 import * as antares from 'common/interfaces/antares';
 import * as workers from 'common/interfaces/workers';
 import { dialog, ipcMain } from 'electron';
 import * as fs from 'fs';
-import * as path from 'path';
+import { Worker } from 'worker_threads';
 
 import { validateSender } from '../libs/misc/validateSender';
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
-
 export default (connections: {[key: string]: antares.Client}) => {
-   let exporter: ChildProcess = null;
-   let importer: ChildProcess = null;
+   let exporter: Worker = null;
+   let importer: Worker = null;
 
    ipcMain.handle('create-schema', async (event, params) => {
       if (!validateSender(event.senderFrame)) return { status: 'error', response: 'Unauthorized process' };
@@ -202,7 +199,7 @@ export default (connections: {[key: string]: antares.Client}) => {
       if (!validateSender(event.senderFrame)) return { status: 'error', response: 'Unauthorized process' };
 
       if (exporter !== null) {
-         exporter.kill();
+         exporter.terminate();
          return;
       }
 
@@ -227,11 +224,12 @@ export default (connections: {[key: string]: antares.Client}) => {
                }
             }
 
-            // Init exporter process
-            exporter = fork(isDevelopment ? './dist/exporter.js' : path.resolve(__dirname, './exporter.js'), [], {
-               execArgv: isDevelopment ? ['--inspect=9224'] : undefined
-            });
-            exporter.send({
+            // Init exporter thread
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            exporter = new Worker(new URL('../workers/exporter', import.meta.url));
+
+            exporter.postMessage({
                type: 'init',
                client: {
                   name: type,
@@ -242,32 +240,34 @@ export default (connections: {[key: string]: antares.Client}) => {
             });
 
             // Exporter message listener
-            exporter.on('message', ({ type, payload }: workers.WorkerIpcMessage) => {
+            exporter.on('message', (message: workers.WorkerIpcMessage) => {
+               const { type, payload } = message;
+
                switch (type) {
                   case 'export-progress':
                      event.sender.send('export-progress', payload);
                      break;
                   case 'end':
-                     setTimeout(() => { // Ensures that writing process has finished
-                        exporter.kill();
+                     setTimeout(() => { // Ensures that writing thread has finished
+                        exporter?.terminate();
                         exporter = null;
                      }, 2000);
                      resolve({ status: 'success', response: payload });
                      break;
                   case 'cancel':
-                     exporter.kill();
+                     exporter?.terminate();
                      exporter = null;
                      resolve({ status: 'error', response: 'Operation cancelled' });
                      break;
                   case 'error':
-                     exporter.kill();
+                     exporter?.terminate();
                      exporter = null;
                      resolve({ status: 'error', response: payload });
                      break;
                }
             });
 
-            exporter.on('exit', code => {
+            exporter.on('close', code => {
                exporter = null;
                resolve({ status: 'error', response: `Operation ended with code: ${code}` });
             });
@@ -291,7 +291,7 @@ export default (connections: {[key: string]: antares.Client}) => {
 
          if (result.response === 1) {
             willAbort = true;
-            exporter.send({ type: 'cancel' });
+            exporter.postMessage({ type: 'cancel' });
          }
       }
 
@@ -302,7 +302,7 @@ export default (connections: {[key: string]: antares.Client}) => {
       if (!validateSender(event.senderFrame)) return { status: 'error', response: 'Unauthorized process' };
 
       if (importer !== null) {
-         importer.kill();
+         importer.terminate();
          return;
       }
 
@@ -310,18 +310,21 @@ export default (connections: {[key: string]: antares.Client}) => {
          (async () => {
             const dbConfig = await connections[options.uid].getDbConfig();
 
-            // Init importer process
-            importer = fork(isDevelopment ? './dist/importer.js' : path.resolve(__dirname, './importer.js'), [], {
-               execArgv: isDevelopment ? ['--inspect=9224'] : undefined
-            });
-            importer.send({
+            // Init importer thread
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            importer = new Worker(new URL('../workers/importer', import.meta.url));
+
+            importer.postMessage({
                type: 'init',
                dbConfig,
                options
             });
 
             // Importer message listener
-            importer.on('message', ({ type, payload }: workers.WorkerIpcMessage) => {
+            importer.on('message', (message: workers.WorkerIpcMessage) => {
+               const { type, payload } = message;
+
                switch (type) {
                   case 'import-progress':
                      event.sender.send('import-progress', payload);
@@ -331,22 +334,27 @@ export default (connections: {[key: string]: antares.Client}) => {
                      break;
                   case 'end':
                      setTimeout(() => { // Ensures that writing process has finished
-                        importer?.kill();
+                        importer?.terminate();
                         importer = null;
                      }, 2000);
                      resolve({ status: 'success', response: payload });
                      break;
                   case 'cancel':
-                     importer.kill();
+                     importer.terminate();
                      importer = null;
                      resolve({ status: 'error', response: 'Operation cancelled' });
                      break;
                   case 'error':
-                     importer.kill();
+                     importer.terminate();
                      importer = null;
                      resolve({ status: 'error', response: payload });
                      break;
                }
+            });
+
+            importer.on('close', code => {
+               importer = null;
+               resolve({ status: 'error', response: `Operation ended with code: ${code}` });
             });
          })();
       });
@@ -368,7 +376,7 @@ export default (connections: {[key: string]: antares.Client}) => {
 
          if (result.response === 1) {
             willAbort = true;
-            importer.send({ type: 'cancel' });
+            importer.postMessage({ type: 'cancel' });
          }
       }
 

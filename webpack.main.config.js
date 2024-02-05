@@ -19,7 +19,15 @@ module.exports = { // Main
    output: {
       libraryTarget: 'commonjs2',
       path: path.join(__dirname, 'dist'),
-      filename: '[name].js'
+      filename: '[name].js',
+      assetModuleFilename: (pathData) => {
+         const { filename } = pathData;
+
+         if (filename.endsWith('.ts'))
+            return '[name].js';
+         else
+            return '[name][ext]';
+      }
    },
    node: {
       global: true,
@@ -43,7 +51,8 @@ module.exports = { // Main
       new ProgressPlugin(true),
       new webpack.DefinePlugin({
          'process.env': {
-            PACKAGE_VERSION: `"${version}"`
+            PACKAGE_VERSION: `"${version}"`,
+            DISTRIBUTION: `"${process.env.DISTRIBUTION || 'none'}"`
          }
       })
    ],

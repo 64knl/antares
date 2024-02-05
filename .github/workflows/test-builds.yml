@@ -1,14 +1,25 @@
-name: Create artifact [LINUX]
+name: Test build [DEVELOP]
 
-on: 
+on:
   workflow_dispatch: {}
 
+env:
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  release:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
+        with: 
+          ref: develop
 
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -20,13 +31,3 @@ jobs:
         
       - name: "Build"
         run: npm run build
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: linux-build
-          retention-days: 3
-          path: |
-            build
-            !build/*-unpacked
-            !build/.icon-ico

@@ -1,8 +1,10 @@
 import SSHConfig from '@fabio286/ssh2-promise/lib/sshConfig';
 import * as antares from 'common/interfaces/antares';
 import { ImportOptions } from 'common/interfaces/importer';
+import * as log from 'electron-log/main';
 import * as mysql from 'mysql2';
 import * as pg from 'pg';
+import { parentPort } from 'worker_threads';
 
 import { MySQLClient } from '../libs/clients/MySQLClient';
 import { PostgreSQLClient } from '../libs/clients/PostgreSQLClient';
@@ -11,14 +13,18 @@ import MySQLImporter from '../libs/importers/sql/MySQLlImporter';
 import PostgreSQLImporter from '../libs/importers/sql/PostgreSQLImporter';
 let importer: antares.Importer;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-process.on('message', async ({ type, dbConfig, options }: {
+log.transports.file.fileName = 'workers.log';
+log.transports.console = null;
+log.errorHandler.startCatching();
+
+const importHandler = async (data: {
    type: string;
    dbConfig: mysql.ConnectionOptions & { schema: string; ssl?: mysql.SslOptions; ssh?: SSHConfig; readonly: boolean }
       | pg.ClientConfig & { schema: string; ssl?: mysql.SslOptions; ssh?: SSHConfig; readonly: boolean }
       | { databasePath: string; readonly: boolean };
    options: ImportOptions;
 }) => {
+   const { type, dbConfig, options } = data;
    if (type === 'init') {
       try {
          const connection = await ClientsFactory.getClient({
@@ -41,7 +47,7 @@ process.on('message', async ({ type, dbConfig, options }: {
                importer = new PostgreSQLImporter(pool as unknown as pg.PoolClient, options);
                break;
             default:
-               process.send({
+               parentPort.postMessage({
                   type: 'error',
                   payload: `"${options.type}" importer not aviable`
                });
@@ -49,33 +55,33 @@ process.on('message', async ({ type, dbConfig, options }: {
          }
 
          importer.once('error', err => {
-            console.error(err);
-            process.send({
+            log.error(err.toString());
+            parentPort.postMessage({
                type: 'error',
                payload: err.toString()
             });
          });
 
          importer.once('end', () => {
-            process.send({
+            parentPort.postMessage({
                type: 'end',
                payload: { cancelled: importer.isCancelled }
             });
          });
 
          importer.once('cancel', () => {
-            process.send({ type: 'cancel' });
+            parentPort.postMessage({ type: 'cancel' });
          });
 
          importer.on('progress', state => {
-            process.send({
+            parentPort.postMessage({
                type: 'import-progress',
                payload: state
             });
          });
 
          importer.on('query-error', state => {
-            process.send({
+            parentPort.postMessage({
                type: 'query-error',
                payload: state
             });
@@ -84,8 +90,8 @@ process.on('message', async ({ type, dbConfig, options }: {
          importer.run();
       }
       catch (err) {
-         console.error(err);
-         process.send({
+         log.error(err.toString());
+         parentPort.postMessage({
             type: 'error',
             payload: err.toString()
          });
@@ -93,20 +99,6 @@ process.on('message', async ({ type, dbConfig, options }: {
    }
    else if (type === 'cancel')
       importer.cancel();
-});
+};
 
-process.on('uncaughtException', (err) => {
-   console.error(err);
-   process.send({
-      type: 'error',
-      payload: err.toString()
-   });
-});
-
-process.on('unhandledRejection', (err) => {
-   console.error(err);
-   process.send({
-      type: 'error',
-      payload: err.toString()
-   });
-});
+parentPort.on('message', importHandler);

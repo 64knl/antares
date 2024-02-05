@@ -68,7 +68,8 @@ export const enUS = {
       zipCompressedFile: 'ZIP compressed {ext} file',
       expandSettingsBar: 'Expand bookmarks',
       collapseSettingsBar: 'Collapse bookmarks',
-      searchConnections: 'Search connections'
+      searchConnections: 'Search connections',
+      copyName: 'Copy name'
    },
    connection: { // Database connection
       connectionName: 'Connection name',
