@@ -3,7 +3,6 @@
       ref="tableWrapper"
       class="vscroll no-outline"
       tabindex="0"
-      :style="{ 'height': resultsSize + 'px' }"
       @blur="deselectRows"
       @focus="hasFocus = true"
       @keyup.delete="showDeleteConfirmModal"

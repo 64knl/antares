@@ -1,5 +1,5 @@
 <template>
-   <div v-show="isSelected" class="workspace column columns col-gapless">
+   <div v-if="isSelected" class="workspace column columns col-gapless">
       <WorkspaceTabsContext
          v-if="isTabContext"
          :context-event="contextEvent"
@@ -882,11 +882,13 @@ onMounted(() => {
 .workspace {
   padding: 0;
   margin: 0;
+  border: 4px solid pink;
+  flex-grow: 1;
 
   .workspace-tabs {
     overflow-y: hidden;
-    height: calc(100vh - #{$excluding-size});
-    position: relative;
+   display: flex;
+   border: 6px solid forestgreen;
 
     .tab-block {
       margin-top: 0;
