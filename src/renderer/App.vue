@@ -15,23 +15,23 @@
                   <WorkspaceAddConnectionPanel v-if="selectedWorkspace === 'NEW'" />
                </div>
             </div>
-            <TheFooter />
             <TheNotificationsBoard />
             <TheScratchpad v-if="isScratchpad" />
             <ModalSettings v-if="isSettingModal" />
             <BaseTextEditor class="d-none" value="" />
          </div>
       </div>
-      <ModalAllConnections
-         v-if="isAllConnectionsModal"
-         @close="isAllConnectionsModal = false"
-      />
-
-      <ModalExportSchema
-         v-if="isExportSchemaModal"
-         @close="hideExportModal"
-      />
+      <TheFooter />
    </div>
+   <ModalAllConnections
+      v-if="isAllConnectionsModal"
+      @close="isAllConnectionsModal = false"
+   />
+
+   <ModalExportSchema
+      v-if="isExportSchemaModal"
+      @close="hideExportModal"
+   />
 </template>
 
 <script setup lang="ts">
@@ -165,13 +165,16 @@ onMounted(() => {
 
   #wrapper {
     height: 100vh;
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 9px solid red;
   }
 
   #window-content {
     display: flex;
-    position: relative;
-    overflow: hidden;
+    flex-grow: 1;
+    overflow:hidden;
+    border: 4px solid blue;
   }
 
   #main-content {
@@ -185,7 +188,6 @@ onMounted(() => {
     }
 
     .connection-panel-wrapper {
-      height: calc(100vh - #{$excluding-size});
       width: 100%;
       padding-top: 10vh;
       display: flex;

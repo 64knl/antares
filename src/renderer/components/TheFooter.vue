@@ -134,15 +134,10 @@ const openOutside = (link: string) => shell.openExternal(link);
 
 <style lang="scss">
   #footer {
-    height: $footer-height;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 0.2rem;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
 
     .footer-elements {
       list-style: none;
