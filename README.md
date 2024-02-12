@@ -7,7 +7,7 @@
 
 # Antares SQL Client
 
-![GitHub package.json version](https://img.shields.io/github/package-json/v/fabio286/antares) ![GitHub](https://img.shields.io/github/license/fabio286/antares) [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ffabio286%2Fantares%2Fbadge&style=flat)](https://actions-badge.atrox.dev/fabio286/antares/goto) ![Mastodon Follow](https://img.shields.io/mastodon/follow/%20110860460902482117?domain=https%3A%2F%2Ffosstodon.org&style=social) [![Twitter Follow](https://img.shields.io/twitter/follow/AntaresSQL?style=social)](https://twitter.com/AntaresSQL) [![Plant a Tree](https://raw.githubusercontent.com/Fabio286/treedom-badge/master/svg/plant-a-tree.svg)](https://www.treedom.net/en/user/fabio-di-stasio/event/antares-for-the-planet)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/fabio286/antares) ![GitHub](https://img.shields.io/github/license/fabio286/antares) ![Test e2e](https://github.com/antares-sql/antares/actions/workflows/test-e2e-win.yml/badge.svg?branch=develop) ![Mastodon Follow](https://img.shields.io/mastodon/follow/%20110860460902482117?domain=https%3A%2F%2Ffosstodon.org&style=social) [![Plant a Tree](https://raw.githubusercontent.com/Fabio286/treedom-badge/master/svg/plant-a-tree.svg)](https://www.treedom.net/en/user/fabio-di-stasio/event/antares-for-the-planet)
 
 Antares is an SQL client based on [Electron.js](https://github.com/electron/electron) and [Vue.js](https://github.com/vuejs/vue) that aims to become a useful tool, especially for developers.  
 Our target is to support as many databases as possible, and all major operating systems, including the ARM versions.  
@@ -17,7 +17,7 @@ However, there are all the features necessary to have a pleasant database manage
 We are actively working on it, hoping to provide new cool features, improvements and fixes as soon as possible.  
 
 🔗 If you are curious to try Antares you can download and install the [latest release](https://github.com/Fabio286/antares/releases/latest).  
-👁 To stay tuned for new releases follow Antares SQL on [Mastodon](https://fosstodon.org/@AntaresSQL) or [Twitter](https://twitter.com/AntaresSQL).  
+👁 To stay tuned for new releases follow Antares SQL on [Mastodon](https://fosstodon.org/@AntaresSQL).  
 🌟 Don't forget to **leave a star** if you appreciate this project.  
 
 🗳️ Polls:
@@ -35,6 +35,7 @@ We are actively working on it, hoping to provide new cool features, improvements
 - Fake table data filler to generate tons of data for test purpose.
 - Query suggestions and auto complete.
 - Query history: search through the last 1000 queries.
+- Save queries, notes or todo.
 - SSH tunnel support.
 - Manual commit mode.
 - Import and export database dumps.
@@ -70,17 +71,6 @@ On macOS you can run `.dmg` distribution following [this guide](https://support.
 [<img height='56' alt='Download on Flathub' src='https://dl.flathub.org/assets/badges/flathub-badge-en.svg'/>](https://flathub.org/apps/it.fabiodistasio.AntaresSQL) [![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/antares) [![Get it from AUR](https://raw.githubusercontent.com/antares-sql/antares/master/docs/aur-badge.svg)](https://aur.archlinux.org/packages/antares-sql-bin) [<img src="https://developer.microsoft.com/store/badges/images/English_get-it-from-MS.png" style="height: 56px">](https://www.microsoft.com/p/antares-sql-client/9nhtb9sq51r1?cid=storebadge&ocid=badge&rtc=1&activetab=pivot:overviewtab)  
 🚀 **[Other Downloads](https://github.com/antares-sql/antares/releases/latest)**
 
-## Coming soon
-
-This is a roadmap with major features will come in near future.
-
-- Database tools.
-- Users management (add/edit/delete).
-- More context menu shortcuts.
-- More keyboard shortcuts.
-- Support for other databases.
-- Apple Silicon distribution
-
 ## Currently supported
 
 ### Databases
@@ -89,6 +79,7 @@ This is a roadmap with major features will come in near future.
 - [x] PostgreSQL
 - [x] SQLite
 - [x] Firebird SQL
+- [ ] DuckDB
 - [ ] SQL Server
 - [ ] More...
 

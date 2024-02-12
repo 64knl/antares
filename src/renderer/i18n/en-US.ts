@@ -1,3 +1,12 @@
+/**
+ * [TRANSLATION UPDATE HELPER]
+ * - Open a terminal in antares folder and run `npm run translation:check short-code` replacing short-code with the one you are updating.
+ * - The command will output which terms are missing or not translated from english.
+ * - Open antares folder with your editor of choice.
+ * - Go to antares/src/renderer/i18n/ and open the locale file you want to translate.
+ * - Add and translate missing terms and consider whether to translate untranslated terms.
+ */
+
 export const enUS = {
    general: { // General purpose terms
       edit: 'Edit',
@@ -69,9 +78,14 @@ export const enUS = {
       expandSettingsBar: 'Expand bookmarks',
       collapseSettingsBar: 'Collapse bookmarks',
       searchConnections: 'Search connections',
-      copyName: 'Copy name'
+      copyName: 'Copy name',
+      search: 'Search',
+      title: 'Title',
+      archive: 'Archive', // verb
+      undo: 'Undo'
    },
    connection: { // Database connection
+      connection: 'Connection',
       connectionName: 'Connection name',
       hostName: 'Host name',
       client: 'Client',
@@ -240,7 +254,7 @@ export const enUS = {
       newFunction: 'New function',
       newScheduler: 'New scheduler',
       newTriggerFunction: 'New trigger function',
-      thereIsNoQueriesYet: 'There is no queries yet',
+      thereAreNoQueriesYet: 'There are no queries yet',
       searchForQueries: 'Search for queries',
       killProcess: 'Kill process',
       exportSchema: 'Export schema',
@@ -269,12 +283,11 @@ export const enUS = {
       targetTable: 'Target table',
       switchDatabase: 'Switch the database',
       searchForElements: 'Search for elements',
-      searchForSchemas: 'Search for schemas'
+      searchForSchemas: 'Search for schemas',
+      savedQueries: 'Saved queries'
    },
    application: { // Application related terms
       settings: 'Settings',
-      scratchpad: 'Scratchpad',
-      disableScratchpad: 'Disable scratchpad',
       console: 'Console',
       general: 'General',
       themes: 'Themes',
@@ -345,7 +358,6 @@ export const enUS = {
       saveContent: 'Save content',
       openAllConnections: 'Open all connections',
       openSettings: 'Open settings',
-      openScratchpad: 'Open scratchpad',
       runOrReload: 'Run or reload',
       openFilter: 'Open filter',
       nextResultsPage: 'Next results page',
@@ -379,7 +391,14 @@ export const enUS = {
       ignoreDuplicates: 'Ignore duplicates',
       wrongImportPassword: 'Wrong import password',
       wrongFileFormat: 'Wrong file format',
-      dataImportSuccess: 'Data successfully imported'
+      dataImportSuccess: 'Data successfully imported',
+      note: 'Note | Notes',
+      thereAreNoNotesYet: 'There are no notes yet',
+      addNote: 'Add note',
+      editNote: 'Edit note',
+      showArchivedNotes: 'Show archived notes',
+      hideArchivedNotes: 'Hide archived notes',
+      tag: 'Tag' // Note tag
    },
    faker: { // Faker.js methods, used in random generated content
       address: 'Address',

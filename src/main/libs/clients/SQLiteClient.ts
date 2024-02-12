@@ -166,7 +166,7 @@ export class SQLiteClient extends BaseClient {
             type: type.trim(),
             schema: schema,
             table: table,
-            numPrecision: [...NUMBER, ...FLOAT].includes(type) ? length : null,
+            numLength: [...NUMBER, ...FLOAT].includes(type) ? length : null,
             datePrecision: null,
             charLength: ![...NUMBER, ...FLOAT].includes(type) ? length : null,
             nullable: !field.notnull,
@@ -658,7 +658,7 @@ export class SQLiteClient extends BaseClient {
                let queryAllResult: any[];
                let affectedRows;
                let fields;
-               const detectedTypes: {[key: string]: string} = {};
+               const detectedTypes: Record<string, string> = {};
 
                try {
                   const stmt = connection.prepare(query);
