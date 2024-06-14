@@ -11,7 +11,7 @@
    >
       <template #item="{ element }">
          <li
-            v-if="element.isFolder || !folderedConnections.includes(element.uid)"
+            v-if="(element.isFolder || !folderedConnections.includes(element.uid)) && element.hidden !== true"
             :draggable="true"
             :class="{'folder': element.isFolder}"
             @dragstart="draggedElement = element.uid"
@@ -35,6 +35,7 @@
                <SettingBarConnections
                   v-if="draggedElement && !foldersUid.includes(draggedElement)"
                   class="drag-area"
+                  :search-query="searchQuery"
                   :class="[{'folder-preview': coveredElement === element.uid && draggedElement !== coveredElement}]"
                   :list="dummyNested"
                   @dragenter="coveredElement = element.uid"
@@ -58,13 +59,8 @@
                            :icon-name="camelize(element.icon)"
                            :size="36"
                         />
+                        <small class="settingbar-element-name">{{ element.name || getConnectionName(element.uid) }}</small>
                      </div>
-                     <div
-                        v-else
-                        class="settingbar-element-icon dbi"
-                        :class="[`dbi-${element.client}`, getStatusBadge(element.uid)]"
-                     />
-                     <small class="settingbar-element-name">{{ element.name || getConnectionName(element.uid) }}</small>
                   </div>
                </template>
             </div>
@@ -72,6 +68,8 @@
                v-else-if="element.isFolder"
                :key="`${element.uid}-${element.connections.length}`"
                :folder="element"
+               :search-query="searchQuery"
+               :is-expanded="isExpandedSettingBar"
                :covered-element="coveredElement"
                :dragged-element="draggedElement"
                :folder-drag="folderDrag"
@@ -93,14 +91,17 @@ import * as Draggable from 'vuedraggable';
 
 import BaseIcon from '@/components/BaseIcon.vue';
 import SettingBarConnectionsFolder from '@/components/SettingBarConnectionsFolder.vue';
+import { useApplicationStore } from '@/stores/application';
 import { SidebarElement, useConnectionsStore } from '@/stores/connections';
 import { useWorkspacesStore } from '@/stores/workspaces';
 
 const workspacesStore = useWorkspacesStore();
 const connectionsStore = useConnectionsStore();
+const applicationStore = useApplicationStore();
 
 const { getSelected: selectedWorkspace } = storeToRefs(workspacesStore);
 const { getFolders: folders } = storeToRefs(connectionsStore);
+const { isExpandedSettingBar } = storeToRefs(applicationStore);
 
 const { getWorkspace, selectWorkspace } = workspacesStore;
 const { getConnectionName, addFolder } = connectionsStore;
@@ -109,6 +110,10 @@ const props = defineProps({
    modelValue: {
       type: Array as PropType<SidebarElement[]>,
       default: () => []
+   },
+   searchQuery: {
+      type: String,
+      required: true
    }
 });
 
@@ -239,8 +244,4 @@ watch(() => props.modelValue, (value) => {
    }
 }
 
-.settingbar-element-icon {
-   display: flex;
-   color: $body-font-color-dark;
-}
 </style>
