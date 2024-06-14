@@ -1,6 +1,7 @@
 <template>
    <div id="wrapper" :class="[`theme-${applicationTheme}`, !disableBlur || 'no-blur']">
       <TheTitleBar />
+      <WorkspaceConnectionTabs />
       <div id="window-content">
          <TheSettingBar @show-connections-modal="isAllConnectionsModal = true" />
          <div id="main-content" class="container">
@@ -59,6 +60,7 @@ const ModalSettings = defineAsyncComponent(() => import(/* webpackChunkName: "Mo
 const ModalAllConnections = defineAsyncComponent(() => import(/* webpackChunkName: "ModalAllConnections" */'@/components/ModalAllConnections.vue'));
 const TheScratchpad = defineAsyncComponent(() => import(/* webpackChunkName: "TheScratchpad" */'@/components/TheScratchpad.vue'));
 const BaseTextEditor = defineAsyncComponent(() => import(/* webpackChunkName: "BaseTextEditor" */'@/components/BaseTextEditor.vue'));
+const WorkspaceConnectionTabs = defineAsyncComponent(() => import(/* webpackChunkName: "WorkspaceConnectionTabs" */'@/components/WorkspaceConnectionTabs.vue'));
 
 const applicationStore = useApplicationStore();
 const connectionsStore = useConnectionsStore();
