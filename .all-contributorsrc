@@ -266,6 +266,24 @@
       "contributions": [
         "translation"
       ]
+    },
+    {
+      "login": "bagusindrayana",
+      "name": "Bagus Indrayana",
+      "avatar_url": "https://avatars.githubusercontent.com/u/36830534?v=4",
+      "profile": "https://github.com/bagusindrayana",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "penguinlab",
+      "name": "Naoki Ishikawa",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10959317?v=4",
+      "profile": "https://github.com/penguinlab",
+      "contributions": [
+        "translation"
+      ]
     }
   ],
   "contributorsPerLine": 7,

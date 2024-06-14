@@ -101,7 +101,7 @@ On macOS you can run `.dmg` distribution following [this guide](https://support.
 
 - 🌍 [Translate Antares](https://github.com/Fabio286/antares/wiki/Translate-Antares)
 - 📖 [Contributors Guide](https://github.com/Fabio286/antares/wiki/Contributors-Guide)
-- 🚧 [Project Board](https://github.com/antares-sql/antares/projects/1)
+- 🚧 [Project Board](https://github.com/orgs/antares-sql/projects/3/views/2)
 
 ## Contributors ✨
 
@@ -147,6 +147,10 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/markusand"><img src="https://avatars.githubusercontent.com/u/12972543?v=4?s=100" width="100px;" alt="Marc Vilella"/><br /><sub><b>Marc Vilella</b></sub></a><br /><a href="#translation-markusand" title="Translation">🌍</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Lawondyss"><img src="https://avatars.githubusercontent.com/u/272130?v=4?s=100" width="100px;" alt="Ladislav Vondráček"/><br /><sub><b>Ladislav Vondráček</b></sub></a><br /><a href="#translation-Lawondyss" title="Translation">🌍</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/zvlad"><img src="https://avatars.githubusercontent.com/u/9055134?v=4?s=100" width="100px;" alt="Vladyslav"/><br /><sub><b>Vladyslav</b></sub></a><br /><a href="#translation-zvlad" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/bagusindrayana"><img src="https://avatars.githubusercontent.com/u/36830534?v=4?s=100" width="100px;" alt="Bagus Indrayana"/><br /><sub><b>Bagus Indrayana</b></sub></a><br /><a href="https://github.com/antares-sql/antares/commits?author=bagusindrayana" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/penguinlab"><img src="https://avatars.githubusercontent.com/u/10959317?v=4?s=100" width="100px;" alt="Naoki Ishikawa"/><br /><sub><b>Naoki Ishikawa</b></sub></a><br /><a href="#translation-penguinlab" title="Translation">🌍</a></td>
     </tr>
   </tbody>
 </table>

@@ -1,11 +1,13 @@
 import { ClientCode } from 'common/interfaces/antares';
 import { jsonToSqlInsert } from 'common/libs/sqlUtils';
 import * as json2php from 'json2php';
+import * as moment from 'moment';
 
 export const exportRows = (args: {
    type: 'csv' | 'json'| 'sql' | 'php';
    content: object[];
    table: string;
+   page?: number;
    client?: ClientCode;
    fields?: {
       [key: string]: {type: string; datePrecision: number};
@@ -31,7 +33,7 @@ export const exportRows = (args: {
          const csv = [];
          const sd = args.csvOptions.stringDelimiter === 'single'
             ? '\''
-            : args.csvOptions.stringDelimiter === 'single'
+            : args.csvOptions.stringDelimiter === 'double'
                ? '"'
                : '';
 
@@ -41,6 +43,7 @@ export const exportRows = (args: {
          for (const row of args.content) {
             csv.push(Object.values(row).map(col => {
                if (typeof col === 'string') return `${sd}${col}${sd}`;
+               if (col instanceof Date) return `${sd}${moment(col).format('YYYY-MM-DD HH:mm:ss')}${sd}`;
                if (col instanceof Buffer) return col.toString('base64');
                if (col instanceof Uint8Array) return Buffer.from(col).toString('base64');
                return col;
@@ -81,7 +84,7 @@ export const exportRows = (args: {
 
    const file = new Blob([content], { type: mime });
    const downloadLink = document.createElement('a');
-   downloadLink.download = `${args.sqlOptions?.targetTable || args.table}.${args.type}`;
+   downloadLink.download = `${args.sqlOptions?.targetTable || args.table}${args.page ? `-${args.page}` : ''}.${args.type}`;
    downloadLink.href = window.URL.createObjectURL(file);
    downloadLink.style.display = 'none';
    document.body.appendChild(downloadLink);

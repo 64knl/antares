@@ -2,6 +2,124 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.25-beta.1](https://github.com/antares-sql/antares/compare/v0.7.25-beta.0...v0.7.25-beta.1) (2024-06-08)
+
+
+### Bug Fixes
+
+* issue switching table after using a filter, fixes[#691](https://github.com/antares-sql/antares/issues/691) ([4a1697d](https://github.com/antares-sql/antares/commit/4a1697d63351b9990efff5804b95d92ac2fc9783))
+
+### [0.7.25-beta.0](https://github.com/antares-sql/antares/compare/v0.7.24...v0.7.25-beta.0) (2024-05-26)
+
+
+### Features
+
+* update japanese translation ([bb3c87b](https://github.com/antares-sql/antares/commit/bb3c87b2cf6fa38e3cfb68317c02aa350aae7887))
+
+
+### Bug Fixes
+
+* missing resizebars on mouse over ([25123e3](https://github.com/antares-sql/antares/commit/25123e34ef860d8bf019c496097e68e0101c9ab9))
+* **PostgreSQL:** unable to search for databases, fixes [#798](https://github.com/antares-sql/antares/issues/798) ([d1bb50b](https://github.com/antares-sql/antares/commit/d1bb50b2bb48d3445080990c28fdc656cf27a6d3))
+
+### [0.7.24](https://github.com/antares-sql/antares/compare/v0.7.24-beta.1...v0.7.24) (2024-05-03)
+
+
+### Bug Fixes
+
+* missing accent color change ([09c274a](https://github.com/antares-sql/antares/commit/09c274a724b5020efc650aaf7eecb2404343a6fc))
+
+### [0.7.24-beta.1](https://github.com/antares-sql/antares/compare/v0.7.24-beta.0...v0.7.24-beta.1) (2024-04-30)
+
+
+### Features
+
+* accent color based on folder color, closes [#762](https://github.com/antares-sql/antares/issues/762) ([058fc2f](https://github.com/antares-sql/antares/commit/058fc2fc0b34cde5aa19233a4a999ef3624dae71))
+
+
+### Bug Fixes
+
+* **PostgreSQL:** better handle connection errors, should fix [#794](https://github.com/antares-sql/antares/issues/794) ([33bbc0e](https://github.com/antares-sql/antares/commit/33bbc0e7e6be370c944e979a34ab2cb19562d1e3))
+* **PostgreSQL:** issue with similar tabs on differend databases ([23c59b4](https://github.com/antares-sql/antares/commit/23c59b4d4e8f250acad75f54d157c7c162e1c4f8))
+
+
+### Improvements
+
+* **UI:** hide "insert row" button in read-only mode, closes [#695](https://github.com/antares-sql/antares/issues/695) ([6600197](https://github.com/antares-sql/antares/commit/6600197b8286ced4c79378883594d21e69a83d8c))
+* **UI:** improvements on light theme ([ece2ee0](https://github.com/antares-sql/antares/commit/ece2ee05cc90a58c1926e882e3ccf4f057f02d68))
+
+### [0.7.24-beta.0](https://github.com/antares-sql/antares/compare/v0.7.23...v0.7.24-beta.0) (2024-04-12)
+
+
+### Features
+
+* add shortcut open,save, and save as file ([6b56c60](https://github.com/antares-sql/antares/commit/6b56c60b68647bc7182548a137cccc3413e3fbd5))
+* add translation for  open,save, and save as file ([f7204dc](https://github.com/antares-sql/antares/commit/f7204dc0ae721534eaefbde097d1c26c1d72ad41))
+* open,save, and save as file in query tab ([c1e58eb](https://github.com/antares-sql/antares/commit/c1e58eb695de78fbf1d2b26c608692f0962373df))
+* unsaved file reminder closing file tabs ([8d8650f](https://github.com/antares-sql/antares/commit/8d8650fbe76c79fd66be857d049b3baaa9ab1f9f))
+
+
+### Bug Fixes
+
+* **translation:** missing translation for "Open notes" shortcut ([0565ae1](https://github.com/antares-sql/antares/commit/0565ae12042901b9d67fe3e0ea269562ec444994))
+
+### [0.7.23](https://github.com/antares-sql/antares/compare/v0.7.23-beta.1...v0.7.23) (2024-04-07)
+
+### [0.7.23-beta.1](https://github.com/antares-sql/antares/compare/v0.7.23-beta.0...v0.7.23-beta.1) (2024-04-02)
+
+
+### Features
+
+* add the page reference in the export file name, closes [#772](https://github.com/antares-sql/antares/issues/772) ([2064294](https://github.com/antares-sql/antares/commit/2064294119ed9dfab2a9968dfb5b35d52e2ae03b))
+* move connections out of folder from context menu, related to [#773](https://github.com/antares-sql/antares/issues/773) ([62e3115](https://github.com/antares-sql/antares/commit/62e311586073ae7ee4896305198c7168f637c1af))
+* move connections to folders from context menu, related to [#773](https://github.com/antares-sql/antares/issues/773) ([9aef287](https://github.com/antares-sql/antares/commit/9aef287a983754158cdbdc9b2a72db9ab82f76c8))
+
+
+### Bug Fixes
+
+* bad format of timestamp fields on CSV export, fixes 776 ([65ec4c5](https://github.com/antares-sql/antares/commit/65ec4c5da6187a7ab2dfff59326cd12bfa788c3b))
+
+### [0.7.23-beta.0](https://github.com/antares-sql/antares/compare/v0.7.22...v0.7.23-beta.0) (2024-03-21)
+
+
+### Bug Fixes
+
+* CSV export does not escape strings when needed, fixes [#770](https://github.com/antares-sql/antares/issues/770) ([dd5b417](https://github.com/antares-sql/antares/commit/dd5b41716a10cf9500f2c611b232f5b5b0756a68))
+* query result sort not working with aliased tables, fixes [#765](https://github.com/antares-sql/antares/issues/765) ([de9dac3](https://github.com/antares-sql/antares/commit/de9dac3e8abf3b3261f8c54c88cf2386a5be2207))
+* shortcut not working on mac os ([0bb5ced](https://github.com/antares-sql/antares/commit/0bb5cedda6a67ccbeea8c127b799f533395101a2))
+
+### [0.7.22](https://github.com/antares-sql/antares/compare/v0.7.22-beta.2...v0.7.22) (2024-02-26)
+
+
+### Bug Fixes
+
+* delete record modal pressing del when editing a field, fixes [#767](https://github.com/antares-sql/antares/issues/767) ([586f901](https://github.com/antares-sql/antares/commit/586f901bae9a80c0e53ac1d804cbae3f05e26d8e))
+
+### [0.7.22-beta.2](https://github.com/antares-sql/antares/compare/v0.7.22-beta.1...v0.7.22-beta.2) (2024-02-18)
+
+
+### Features
+
+* **MySQL:** option to enable single connection mode ([d3f71e6](https://github.com/antares-sql/antares/commit/d3f71e65cef88838f03f95a4b34e197fb61878f8))
+
+### [0.7.22-beta.1](https://github.com/antares-sql/antares/compare/v0.7.22-beta.0...v0.7.22-beta.1) (2024-02-12)
+
+
+### Features
+
+* update dutch translation + fix spelling mistake ([30ada13](https://github.com/antares-sql/antares/commit/30ada13663e88f89beb3dd7291010837059585d5))
+
+
+### Bug Fixes
+
+* some issues related to previous commit ([259d051](https://github.com/antares-sql/antares/commit/259d051a21e334496d3a52b662f1855ba9a9046d))
+* unable to edit tables containing SET fields, fixes [#755](https://github.com/antares-sql/antares/issues/755) ([d698f27](https://github.com/antares-sql/antares/commit/d698f2798a2423f86e6d786dd3ab80439b372a08))
+
+
+### Improvements
+
+* **MySQL:** improvements in connection handling ([876d5ea](https://github.com/antares-sql/antares/commit/876d5ea48185334e9e2fc981c4282a9c42d22b10))
+
 ### [0.7.22-beta.0](https://github.com/antares-sql/antares/compare/v0.7.21...v0.7.22-beta.0) (2024-02-04)
 
 

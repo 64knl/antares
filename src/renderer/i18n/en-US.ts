@@ -82,7 +82,8 @@ export const enUS = {
       search: 'Search',
       title: 'Title',
       archive: 'Archive', // verb
-      undo: 'Undo'
+      undo: 'Undo',
+      moveTo: 'Move to'
    },
    connection: { // Database connection
       connection: 'Connection',
@@ -119,7 +120,8 @@ export const enUS = {
       readOnlyMode: 'Read-only mode',
       allConnections: 'All connections',
       searchForConnections: 'Search for connections',
-      keepAliveInterval: 'Keep alive interval'
+      keepAliveInterval: 'Keep alive interval',
+      singleConnection: 'Single connection'
    },
    database: { // Database related terms
       schema: 'Schema',
@@ -334,7 +336,7 @@ export const enUS = {
       wrapLongLines: 'Wrap long lines',
       markdownSupported: 'Markdown supported',
       plantATree: 'Plant a Tree',
-      dataTabPageSize: 'DATA tab page size',
+      dataTabPageSize: 'Results per page',
       noOpenTabs: 'There are no open tabs, navigate on the left bar or:',
       restorePreviousSession: 'Restore previous session',
       closeTab: 'Close tab',
@@ -365,6 +367,8 @@ export const enUS = {
       editFolder: 'Edit folder',
       folderName: 'Folder name',
       deleteFolder: 'Delete folder',
+      newFolder: 'New folder',
+      outOfFolder: 'Out of folder',
       editConnectionAppearance: 'Edit connection appearance',
       defaultCopyType: 'Default copy type',
       showTableSize: 'Show table size in sidebar',
@@ -396,9 +400,15 @@ export const enUS = {
       thereAreNoNotesYet: 'There are no notes yet',
       addNote: 'Add note',
       editNote: 'Edit note',
+      saveAsNote: 'Save as note',
       showArchivedNotes: 'Show archived notes',
       hideArchivedNotes: 'Hide archived notes',
-      tag: 'Tag' // Note tag
+      tag: 'Tag', // Note tag,
+      saveFile: 'Save file',
+      saveFileAs: 'Save file as',
+      openFile: 'Open file',
+      openNotes: 'Open notes'
+
    },
    faker: { // Faker.js methods, used in random generated content
       address: 'Address',

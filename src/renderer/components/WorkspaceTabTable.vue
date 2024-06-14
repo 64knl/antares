@@ -91,7 +91,7 @@
                   <BaseIcon icon-name="mdiMagnify" :size="24" />
                </button>
                <button
-                  v-if="isTable"
+                  v-if="isTable && !connection.readonly"
                   class="btn btn-dark btn-sm"
                   :disabled="isQuering"
                   @click="showFakerModal()"
@@ -202,6 +202,7 @@
             v-if="results"
             ref="queryTable"
             :results="results"
+            :page="page"
             :tab-uid="tabUid"
             :conn-uid="connection.uid"
             :is-selected="isSelected"
@@ -440,6 +441,25 @@ const resizeScroller = () => {
 const updateFilters = (clausoles: TableFilterClausole[]) => {
    filters.value = clausoles;
    results.value = [];
+
+   const permanentTabs = {
+      table: 'data',
+      view: 'data',
+      trigger: 'trigger-props',
+      triggerFunction: 'trigger-function-props',
+      function: 'function-props',
+      routine: 'routine-props',
+      procedure: 'routine-props',
+      scheduler: 'scheduler-props'
+   } as Record<string, string>;
+
+   newTab({
+      uid: props.connection.uid,
+      schema: props.schema,
+      elementName: props.table,
+      type: permanentTabs[props.elementType],
+      elementType: props.elementType
+   });
    getTableData();
 };
 
