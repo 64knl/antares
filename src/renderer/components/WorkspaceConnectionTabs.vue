@@ -23,6 +23,30 @@
             @click="disconnect(connectionItem)"
          />
       </button>
+      <button
+         v-if="!getConnected.includes(selectedWorkspace) && selectedWorkspace !== 'NEW'"
+         class="d-flex connection-tab"
+      >
+         <BaseIcon
+            icon-name="mdiPlus"
+            :size="16"
+            class="inline-block"
+         /> Connect {{
+            getConnectionName(selectedWorkspace)
+         }}
+      </button>
+      <button
+         v-if="getConnected.includes(selectedWorkspace)|| selectedWorkspace === 'NEW'"
+         class="d-flex connection-tab"
+         :style="`opacity: ${selectedWorkspace === 'NEW' ? 1 : 0.5};`"
+         @click="selectWorkspace('NEW')"
+      >
+         <BaseIcon
+            icon-name="mdiPlus"
+            :size="16"
+            class="inline-block"
+         /> Add
+      </button>
    </div>
 </template>
 
