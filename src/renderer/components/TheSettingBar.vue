@@ -1,5 +1,26 @@
 <template>
-   <div id="settingbar">
+   <div
+      id="settingbar"
+      :class="{expanded: isExpandedSettingBar}"
+   >
+      <div v-if="isExpandedSettingBar" class="settingbar-search">
+         <div class="input-group has-icon-right">
+            <input
+               id="searchConnections"
+               ref="searchInput"
+               v-model="searchQuery"
+               class="form-input input-sm"
+               type="text"
+               :placeholder="t('general.searchConnections')"
+            >
+            <i v-if="!searchQuery" class="form-icon mdi mdi-magnify mdi-18px" />
+            <i
+               v-else
+               class="form-icon c-hand mdi mdi-backspace mdi-18px pr-1"
+               @click="searchQuery = ''"
+            />
+         </div>
+      </div>
       <div ref="sidebarConnections" class="settingbar-top-elements">
          <SettingBarContext
             v-if="isContext"
@@ -10,6 +31,7 @@
          <ul class="settingbar-elements">
             <SettingBarConnections
                v-model="connectionsArr"
+               :search-query="searchQuery"
                @context="contextMenu"
             />
          </ul>
@@ -68,11 +90,43 @@
                @click="showScratchpad()"
             >
                <BaseIcon
-                  icon-name="mdiNotebookOutline"
+                  icon-name="mdiNotebookEditOutline"
                   class="settingbar-element-icon text-light"
                   :size="24"
                />
             </li>
+            <li
+               v-if="isExpandedSettingBar === true"
+               v-tooltip="{
+                  strategy: 'fixed',
+                  placement: 'right',
+                  content: t('general.collapseSettingsBar')
+               }"
+               class="settingbar-element btn btn-link"
+               @click="hideExpandedSettingBar(); searchQuery = ''"
+            >
+               <BaseIcon
+                  :icon-name="isExpandedSettingBar ? 'mdiArrowCollapse' : 'mdiArrowExpand'"
+                  :size="24"
+               />
+            </li>
+
+            <li
+               v-else
+               v-tooltip="{
+                  strategy: 'fixed',
+                  placement: 'right',
+                  content: t('general.expandSettingsBar')
+               }"
+               class="settingbar-element btn btn-link"
+               @click="showExpandedSettingBar(); searchQuery = ''"
+            >
+               <BaseIcon
+                  :icon-name="isExpandedSettingBar ? 'mdiArrowCollapse' : 'mdiArrowExpand'"
+                  :size="24"
+               />
+            </li>
+
             <li
                v-tooltip="{
                   strategy: 'fixed',
@@ -119,25 +173,54 @@ const applicationStore = useApplicationStore();
 const connectionsStore = useConnectionsStore();
 const workspacesStore = useWorkspacesStore();
 
-const { updateStatus } = storeToRefs(applicationStore);
+const { updateStatus, isExpandedSettingBar } = storeToRefs(applicationStore);
 const { getSelected: selectedWorkspace } = storeToRefs(workspacesStore);
 const { connectionsOrder } = storeToRefs(connectionsStore);
 
-const { showSettingModal, showScratchpad } = applicationStore;
-const { updateConnectionsOrder, initConnectionsOrder } = connectionsStore;
+const { showSettingModal, showScratchpad, showExpandedSettingBar, hideExpandedSettingBar } = applicationStore;
+const { updateConnectionsOrder, initConnectionsOrder, getConnectionName } = connectionsStore;
 const { selectWorkspace } = workspacesStore;
 
 const emit = defineEmits(['show-connections-modal']);
 
 const sidebarConnections: Ref<HTMLDivElement> = ref(null);
 const isContext: Ref<boolean> = ref(false);
+const searchQuery: Ref<string> = ref('');
 const isScrollable: Ref<boolean> = ref(false);
 const contextEvent: Ref<MouseEvent> = ref(null);
 const contextConnection: Ref<SidebarElement> = ref(null);
 const sidebarConnectionsHeight = ref(useElementBounding(sidebarConnections)?.height);
 
 const connectionsArr = computed({
-   get: () => connectionsOrder.value,
+   get: () => {
+      // First filter matches
+      return connectionsOrder.value.map(d => {
+         if (d.isFolder) {
+            if (d.name && d.name.toLowerCase().includes(searchQuery.value.toLowerCase())) {
+               d.hidden = false;
+               // TODO: force show all items in folder.
+               return d;
+            }
+
+            let showFolder = false;
+
+            d.connections.forEach(d => {
+               if (getConnectionName(d).toLowerCase().includes(searchQuery.value.toLowerCase()))
+                  showFolder = true;
+            });
+            d.hidden = !showFolder;
+            return d;
+         }
+         else {
+            if (getConnectionName(d.uid).toLowerCase().includes(searchQuery.value.toLowerCase()))
+               d.hidden = false;
+            else
+               d.hidden = true;
+            return d;
+         }
+      });
+   },
+
    set: (value: SidebarElement[]) => {
       updateConnectionsOrder(value);
    }
@@ -174,7 +257,7 @@ if (!connectionsArr.value.length)
 
 <style lang="scss">
 #settingbar {
-   width: $settingbar-width;
+   width: $settingbar-width * 4;
    height: calc(100vh - #{$excluding-size});
    display: flex;
    flex-direction: column;
@@ -182,6 +265,7 @@ if (!connectionsArr.value.length)
    align-items: center;
    padding: 0;
    z-index: 9;
+   transition: width 0.2s ease-in-out;
 
    .settingbar-top-elements {
       overflow-x: hidden;
@@ -305,6 +389,58 @@ if (!connectionsArr.value.length)
             }
          }
       }
+   }
+
+   // Search input
+   .settingbar-search {
+      margin-top: 0.3rem;
+      padding: 0 5px 0;
+      width: 100%;
+      input {
+         border-radius: .2rem;
+      }
+   }
+
+   &.expanded {
+
+     width: $settingbar-width * 4;
+
+     settingbar-top-elements
+     {
+      width: 100%;
+      .settingbar-elements {
+        width: 100%;
+        padding: 1rem;
+        box-sizing: border-box;
+    // width: calc( $settingbar-width * 4 - 1rem)
+    }
+    }
+
+      .settingbar-bottom-elements ul {
+         display: flex;
+         flex-direction: row;
+         width: $settingbar-width * 3;
+      }
+
+      // .settingbar-top-elements .settingbar-element {
+      //    width: 100%;
+      //    height: auto;
+      // }
+
+      // .settingbar-elements .settingbar-element {
+      //    .settingbar-element-icon-wrapper{
+      //       flex-direction:row;
+      //       justify-content: left;
+
+      //       .settingbar-element-name {
+      //          font-size: 100%;
+      //          width: $settingbar-width * 4;
+      //          max-width: 90%;
+      //          text-align: left;
+      //          padding-left: 1rem;
+      //       }
+      //    }
+      // }
    }
 }
 </style>
