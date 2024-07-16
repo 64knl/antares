@@ -122,23 +122,6 @@ app.on('ready', async () => {
       defaultHeight: 800
 
    });
-   // if (isDevelopment)
-
-   mainWindow.webContents.openDevTools();
-
-   // const key = safeStorage.encryptString('godisnothere');
-   // console.log('KEY:', key.toString('hex'));
-
-   // const decrypted = safeStorage.decryptString(key);
-   // console.log(decrypted.toString());
-
-   process.on('uncaughtException', error => {
-      mainWindow.webContents.send('unhandled-exception', error);
-   });
-
-   process.on('unhandledRejection', error => {
-      mainWindow.webContents.send('unhandled-exception', error);
-   });
 
    mainWindow = await createMainWindow();
    createAppMenu();
