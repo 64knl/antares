@@ -525,7 +525,7 @@ export const enUS = {
       userName: 'Username',
       protocol: 'Protocol',
       url: 'Url',
-      domainName: 'Domin name',
+      domainName: 'Domain name',
       domainSuffix: 'Domain suffix',
       domainWord: 'Domain word',
       ip: 'Ip',
