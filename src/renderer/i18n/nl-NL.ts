@@ -71,7 +71,10 @@ export const nlNL = {
       title: 'Titel',
       archive: 'Archief',
       undo: 'Ongedaan maken',
-      moveTo: 'Verplaats naar'
+      moveTo: 'Verplaats naar',
+      expandSettingsBar: 'Expand bookmarks',
+      collapseSettingsBar: 'Collapse bookmarks',
+      searchConnections: 'Doorzoek favorieten'
    },
    connection: {
       connectionName: 'Naam verbinding',

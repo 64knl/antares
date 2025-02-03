@@ -37,7 +37,7 @@ export interface ClientParams {
 }
 
 /**
- * Paramenets insered by user in connection mask
+ * Parameters inserted by user in connection mask
  */
 export interface ConnectionParams {
    uid: string;

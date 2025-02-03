@@ -4,6 +4,7 @@
       <div id="window-content">
          <TheSettingBar @show-connections-modal="isAllConnectionsModal = true" />
          <div id="main-content" class="container">
+            <TheConnectionTabs />
             <div class="columns col-gapless">
                <Workspace
                   v-for="connection in connections"
@@ -12,23 +13,23 @@
                />
                <WorkspaceAddConnectionPanel v-if="selectedWorkspace === 'NEW'" />
             </div>
-            <TheFooter />
             <TheNotificationsBoard />
             <TheScratchpad v-if="isScratchpad" />
             <ModalSettings v-if="isSettingModal" />
             <BaseTextEditor class="d-none" value="" />
          </div>
       </div>
-      <ModalAllConnections
-         v-if="isAllConnectionsModal"
-         @close="isAllConnectionsModal = false"
-      />
-
-      <ModalExportSchema
-         v-if="isExportSchemaModal"
-         @close="hideExportModal"
-      />
+      <TheFooter />
    </div>
+   <ModalAllConnections
+      v-if="isAllConnectionsModal"
+      @close="isAllConnectionsModal = false"
+   />
+
+   <ModalExportSchema
+      v-if="isExportSchemaModal"
+      @close="hideExportModal"
+   />
 </template>
 
 <script setup lang="ts">
@@ -59,6 +60,7 @@ const ModalSettings = defineAsyncComponent(() => import(/* webpackChunkName: "Mo
 const ModalAllConnections = defineAsyncComponent(() => import(/* webpackChunkName: "ModalAllConnections" */'@/components/ModalAllConnections.vue'));
 const TheScratchpad = defineAsyncComponent(() => import(/* webpackChunkName: "TheScratchpad" */'@/components/TheScratchpad.vue'));
 const BaseTextEditor = defineAsyncComponent(() => import(/* webpackChunkName: "BaseTextEditor" */'@/components/BaseTextEditor.vue'));
+const TheConnectionTabs = defineAsyncComponent(() => import(/* webpackChunkName: "TheConnectionTabs" */'@/components/TheConnectionTabs.vue'));
 
 const applicationStore = useApplicationStore();
 const connectionsStore = useConnectionsStore();
@@ -72,6 +74,7 @@ const {
 const { connections } = storeToRefs(connectionsStore);
 const { applicationTheme, disableBlur } = storeToRefs(settingsStore);
 const { getSelected: selectedWorkspace } = storeToRefs(workspacesStore);
+const { isExpandedSettingBar } = storeToRefs(applicationStore);
 
 const { checkVersionUpdate } = applicationStore;
 const { changeApplicationTheme } = settingsStore;
@@ -221,27 +224,29 @@ window.addEventListener('error', (event) => {
 
   #wrapper {
     height: 100vh;
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 9px solid red;
   }
 
   #window-content {
     display: flex;
-    position: relative;
-    overflow: hidden;
+    flex-grow: 1;
+    overflow:hidden;
+    border: 4px solid blue;
   }
 
   #main-content {
     padding: 0;
     justify-content: flex-start;
-    height: calc(100vh - #{$excluding-size});
+    height: calc(100vh - 5rem);// #{$excluding-size});
     width: calc(100% - #{$settingbar-width});
 
     > .columns {
-      height: calc(100vh - #{$footer-height});
+      height: calc(100vh - 5rem);//#{$footer-height});
     }
 
     .connection-panel-wrapper {
-      height: calc(100vh - #{$excluding-size});
       width: 100%;
       padding-top: 10vh;
       display: flex;
