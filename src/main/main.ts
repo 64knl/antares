@@ -120,6 +120,7 @@ app.on('ready', async () => {
    mainWindowState = windowStateKeeper({
       defaultWidth: 1024,
       defaultHeight: 800
+
    });
 
    mainWindow = await createMainWindow();
