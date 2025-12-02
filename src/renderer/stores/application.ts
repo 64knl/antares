@@ -16,6 +16,7 @@ export const useApplicationStore = defineStore('application', {
       isNewModal: false,
       isSettingModal: false,
       isScratchpad: false,
+      isExpandedSettingBar: false,
       selectedSettingTab: 'general',
       updateStatus: 'noupdate' as UpdateStatus,
       downloadProgress: 0,
@@ -61,6 +62,12 @@ export const useApplicationStore = defineStore('application', {
       },
       hideScratchpad () {
          this.isScratchpad = false;
+      },
+      showExpandedSettingBar () {
+         this.isExpandedSettingBar = true;
+      },
+      hideExpandedSettingBar () {
+         this.isExpandedSettingBar = false;
       }
    }
 });

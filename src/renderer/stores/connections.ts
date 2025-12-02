@@ -14,6 +14,7 @@ let key = localStorage.getItem('key');
 
 export interface SidebarElement {
    isFolder: boolean;
+   hidden?: boolean;
    uid: string;
    client?: string;
    connections?: string[];
