@@ -1,7 +1,7 @@
 {
   "name": "antares",
   "productName": "Antares",
-  "version": "0.7.32",
+  "version": "0.7.35",
   "description": "A modern, fast and productivity driven SQL client with a focus in UX.",
   "license": "MIT",
   "repository": "https://github.com/antares-sql/antares.git",
@@ -90,7 +90,9 @@
       "license": "./LICENSE",
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
-      "installerHeader": "assets/icon.ico"
+      "installerHeader": "assets/icon.ico",
+      "oneClick": false,
+      "perMachine": false
     },
     "portable": {
       "artifactName": "${productName}-${version}-portable.exe"
@@ -214,5 +216,8 @@
     "vue-eslint-parser": "~8.3.0",
     "webpack-dev-server": "~4.11.1",
     "xvfb-maybe": "~0.2.1"
+  },
+  "optionalDependencies": {
+    "dmg-license": "~1.0.11"
   }
 }

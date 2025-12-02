@@ -2,6 +2,7 @@ import SSH2Promise = require('@fabio286/ssh2-promise');
 import SSHConfig from '@fabio286/ssh2-promise/lib/sshConfig';
 import dataTypes from 'common/data-types/mysql';
 import * as antares from 'common/interfaces/antares';
+import { removeComments } from 'common/libs/sqlUtils';
 import * as mysql from 'mysql2/promise';
 
 import * as EncodingToCharset from '../../../../node_modules/mysql2/lib/constants/encoding_charset.js';
@@ -173,13 +174,13 @@ export class MySQLClient extends BaseClient {
                remotePort: this._params.port
             });
 
-            dbConfig.host = this._ssh.config[0].host;
+            dbConfig.host = undefined;
             dbConfig.port = tunnel.localPort;
          }
          catch (err) {
             if (this._ssh) {
-               this._ssh.close();
                this._ssh.closeTunnel();
+               this._ssh.close();
             }
             throw err;
          }
@@ -227,8 +228,8 @@ export class MySQLClient extends BaseClient {
       clearInterval(this._keepaliveTimer);
       this._keepaliveTimer = undefined;
       if (this._ssh) {
-         this._ssh.close();
          this._ssh.closeTunnel();
+         this._ssh.close();
       }
    }
 
@@ -695,7 +696,12 @@ export class MySQLClient extends BaseClient {
       return rows.length ? rows[0].count : 0;
    }
 
-   async getTableChecks ({ schema, table }: { schema: string; table: string }): Promise<antares.TableCheck[]> {
+   async getTableChecks ({ schema, table }: { schema: string; table: string }): Promise<antares.TableCheck[] | false> {
+      const { rows: checkTableExists } = await this.raw('SELECT table_name FROM information_schema.tables WHERE table_schema = "information_schema" AND table_name = "CHECK_CONSTRAINTS"');
+
+      if (!checkTableExists.length)// check if CHECK_CONSTRAINTS table exists
+         return false;
+
       const { rows } = await this.raw(`
             SELECT 
                CONSTRAINT_NAME as name, 
@@ -1751,7 +1757,7 @@ export class MySQLClient extends BaseClient {
       };
 
       if (!args.comments)
-         sql = sql.replace(/(\/\*(.|[\r\n])*?\*\/)|(--(.*|[\r\n]))/gm, '');// Remove comments
+         sql = removeComments(sql);
 
       const nestTables = args.nest ? '.' : false;
       const resultsArr: antares.QueryResult[] = [];

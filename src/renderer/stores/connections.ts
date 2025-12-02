@@ -164,7 +164,8 @@ export const useConnectionsStore = defineStore('connections', {
                   uid: connection.uid,
                   client: connection.client,
                   icon: conn.icon,
-                  name: conn.name
+                  name: conn.name,
+                  hasCustomIcon: conn.hasCustomIcon
                };
             }
             return conn;
