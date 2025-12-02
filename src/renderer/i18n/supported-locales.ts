@@ -9,11 +9,14 @@ export const localesNames: Record<string, string> = {
    'vi-VN': 'Tiếng Việt',
    'ja-JP': '日本語',
    'zh-CN': '简体中文',
+   'zh-TW': '正體中文',
    'ru-RU': 'Русский',
    'id-ID': 'Bahasa Indonesia',
    'ko-KR': '한국어',
    'nl-NL': 'Nederlands',
    'ca-ES': 'Català',
    'cs-CZ': 'Čeština',
-   'uk-UA': 'Українська'
+   'uk-UA': 'Українська',
+   'uz-UZ': 'O`zbek',
+   'he-IL': 'עברית'
 };

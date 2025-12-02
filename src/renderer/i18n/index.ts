@@ -7,6 +7,7 @@ import { deDE } from './de-DE';
 import { enUS } from './en-US';
 import { esES } from './es-ES';
 import { frFR } from './fr-FR';
+import { heIL } from './he-IL';
 import { idID } from './id-ID';
 import { itIT } from './it-IT';
 import { jaJP } from './ja-JP';
@@ -15,8 +16,11 @@ import { nlNL } from './nl-NL';
 import { ptBR } from './pt-BR';
 import { ruRU } from './ru-RU';
 import { ukUA } from './uk-UA';
+import { uzUZ } from './uz-UZ';
 import { viVN } from './vi-VN';
 import { zhCN } from './zh-CN';
+import { zhTW } from './zh-TW';
+
 const messages = {
    'en-US': enUS,
    'it-IT': itIT,
@@ -34,7 +38,10 @@ const messages = {
    'nl-NL': nlNL,
    'ca-ES': caES,
    'cs-CZ': csCZ,
-   'uk-UA': ukUA
+   'uk-UA': ukUA,
+   'zh-TW': zhTW,
+   'he-IL': heIL,
+   'uz-UZ': uzUZ
 };
 
 type NestedPartial<T> = {
@@ -46,6 +53,8 @@ export type AvailableLocale = keyof typeof messages
 
 const i18n = createI18n<[NestedPartial<MessageSchema>], AvailableLocale>({
    fallbackLocale: 'en-US',
+   silentTranslationWarn: true,
+   silentFallbackWarn: true,
    allowComposition: true,
    messages
 });

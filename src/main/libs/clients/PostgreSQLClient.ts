@@ -2,6 +2,7 @@ import SSH2Promise = require('@fabio286/ssh2-promise');
 import SSHConfig from '@fabio286/ssh2-promise/lib/sshConfig';
 import dataTypes from 'common/data-types/postgresql';
 import * as antares from 'common/interfaces/antares';
+import { removeComments } from 'common/libs/sqlUtils';
 import * as pg from 'pg';
 import * as pgAst from 'pgsql-ast-parser';
 import { ConnectionOptions } from 'tls';
@@ -155,6 +156,7 @@ export class PostgreSQLClient extends BaseClient {
          host: this._params.host,
          port: this._params.port,
          user: this._params.user,
+         connectionString: this._params.connectionString,
          database: 'postgres' as string,
          password: this._params.password,
          ssl: null as ConnectionOptions
@@ -168,6 +170,8 @@ export class PostgreSQLClient extends BaseClient {
          try {
             this._ssh = new SSH2Promise({
                ...this._params.ssh,
+               reconnect: true,
+               reconnectTries: 3,
                debug: process.env.NODE_ENV !== 'production' ? (s) => console.log(s) : null
             });
 
@@ -176,7 +180,7 @@ export class PostgreSQLClient extends BaseClient {
                remotePort: this._params.port
             });
 
-            dbConfig.host = (this._ssh.config as SSHConfig[] & { host: string }).host;
+            dbConfig.host = undefined;
             dbConfig.port = tunnel.localPort;
          }
          catch (err) {
@@ -241,6 +245,10 @@ export class PostgreSQLClient extends BaseClient {
       });
 
       return connection;
+   }
+
+   ping () {
+      return this.select('1+1').run();
    }
 
    destroy () {
@@ -341,7 +349,7 @@ export class PostgreSQLClient extends BaseClient {
                matviewowner AS owner,
                ispopulated AS is_populated,
                definition,
-               'materializedview' AS table_type
+               'materializedView' AS table_type
             FROM pg_matviews
             WHERE schemaname = '${db.database}'
             ORDER BY schema_name,
@@ -401,8 +409,8 @@ export class PostgreSQLClient extends BaseClient {
                   name: table.table_name,
                   type: table.table_type === 'VIEW'
                      ? 'view'
-                     : table.table_type === 'materializedview'
-                        ? 'materializedview'
+                     : table.table_type === 'materializedView'
+                        ? 'materializedView'
                         : 'table',
                   rows: table.reltuples,
                   size: tableSize,
@@ -459,7 +467,7 @@ export class PostgreSQLClient extends BaseClient {
                procedures: remappedProcedures,
                triggers: remappedTriggers,
                triggerFunctions: remappedTriggerFunctions,
-               schedulers: []
+               schedulers: [] as null[]
             };
          }
          else {
@@ -494,16 +502,27 @@ export class PostgreSQLClient extends BaseClient {
          column_default: string;
          character_set_name: string;
          collation_name: string;
+         column_comment: string;
       }
       /* eslint-enable camelcase */
 
-      const { rows } = await this
-         .select('*')
-         .schema('information_schema')
-         .from('columns')
-         .where({ table_schema: `= '${schema}'`, table_name: `= '${table}'` })
-         .orderBy({ ordinal_position: 'ASC' })
-         .run<TableColumnsResult>();
+      // Table columns
+      const { rows } = await this.raw<antares.QueryResult<TableColumnsResult>>(`
+         WITH comments AS (
+            SELECT attr.attname AS column, des.description AS comment, pgc.relname
+            FROM pg_attribute AS attr, pg_description AS des, pg_class AS pgc
+            WHERE pgc.oid = attr.attrelid
+            AND des.objoid = pgc.oid
+            AND pg_table_is_visible(pgc.oid)
+            AND attr.attnum = des.objsubid
+         )
+         SELECT cols.*, comments.comment AS column_comment
+         FROM "information_schema"."columns" AS cols
+         LEFT JOIN comments ON comments.column = cols.column_name AND comments.relname = cols.table_name
+         WHERE cols.table_schema = '${schema}'
+         AND cols.table_name = '${table}'
+         ORDER BY "ordinal_position" ASC
+      `);
 
       return rows.map(field => {
          let type = field.data_type;
@@ -514,7 +533,7 @@ export class PostgreSQLClient extends BaseClient {
 
          return {
             name: field.column_name,
-            key: null,
+            key: null as null,
             type: type.toUpperCase(),
             isArray,
             schema: field.table_schema,
@@ -524,15 +543,15 @@ export class PostgreSQLClient extends BaseClient {
             datePrecision: field.datetime_precision,
             charLength: field.character_maximum_length,
             nullable: field.is_nullable.includes('YES'),
-            unsigned: null,
-            zerofill: null,
+            unsigned: null as null,
+            zerofill: null as null,
             order: field.ordinal_position,
             default: field.column_default,
             charset: field.character_set_name,
             collation: field.collation_name,
             autoIncrement: false,
-            onUpdate: null,
-            comment: ''
+            onUpdate: null as null,
+            comment: field.column_comment
          };
       });
    }
@@ -591,8 +610,8 @@ export class PostgreSQLClient extends BaseClient {
       }
       /* eslint-enable camelcase */
 
-      if (schema !== 'public')
-         await this.use(schema);
+      // if (schema !== 'public')
+      await this.use(schema);
 
       const { rows } = await this.raw<antares.QueryResult<ShowIntexesResult>>(`WITH ndx_list AS (
          SELECT pg_index.indexrelid, pg_class.oid
@@ -636,35 +655,7 @@ export class PostgreSQLClient extends BaseClient {
       }, {} as {table: string; schema: string}[]);
    }
 
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
    async getTableDll ({ schema, table }: { schema: string; table: string }) {
-      // const { rows } = await this.raw<antares.QueryResult<{'ddl'?: string}>>(`
-      //    SELECT
-      //       'CREATE TABLE ' || relname || E'\n(\n' ||
-      //             array_to_string(
-      //                array_agg('    ' || column_name || ' ' ||  type || ' '|| not_null)
-      //                , E',\n'
-      //             ) || E'\n);\n' AS ddl
-      //    FROM (
-      //          SELECT
-      //             a.attname AS column_name
-      //             , pg_catalog.format_type(a.atttypid, a.atttypmod) AS type
-      //             , CASE WHEN a.attnotnull THEN 'NOT NULL' ELSE 'NULL' END AS not_null
-      //             , c.relname
-      //          FROM pg_attribute a, pg_class c, pg_type t
-      //          WHERE a.attnum > 0
-      //             AND a.attrelid = c.oid
-      //             AND a.atttypid = t.oid
-      //             AND c.relname = '${table}'
-      //          ORDER BY a.attnum
-      //    ) AS tabledefinition
-      //    GROUP BY relname
-      // `);
-
-      // if (rows.length)
-      //    return rows[0].ddl;
-      // else return '';
-
       /* eslint-disable camelcase */
       interface SequenceRecord {
          sequence_catalog: string;
@@ -706,6 +697,34 @@ export class PostgreSQLClient extends BaseClient {
 
       if (!rows.length) return '';
 
+      const indexes = await this.getTableIndexes({ schema, table });
+      const primaryKey = indexes
+         .filter(i => i.type === 'PRIMARY')
+         .reduce((acc, cur) => {
+            if (!Object.keys(acc).length) {
+               cur.column = `"${cur.column}"`;
+               acc = cur;
+            }
+            else
+               acc.column += `, "${cur.column}"`;
+            return acc;
+         }, {} as { name: string; column: string; type: string});
+
+      const remappedIndexes = indexes
+         .filter(i => i.type !== 'PRIMARY')
+         .reduce((acc, cur) => {
+            const existingIndex = acc.findIndex(i => i.name === cur.name);
+
+            if (existingIndex >= 0)
+               acc[existingIndex].column += `, "${cur.column}"`;
+            else {
+               cur.column = `"${cur.column}"`;
+               acc.push(cur);
+            }
+
+            return acc;
+         }, [] as { name: string; column: string; type: string}[]);
+
       for (const column of rows) {
          let fieldType = column.data_type;
          if (fieldType === 'USER-DEFINED') fieldType = `"${schema}".${column.udt_name}`;
@@ -733,6 +752,9 @@ export class PostgreSQLClient extends BaseClient {
          columnsSql.push(columnArr.join(' '));
       }
 
+      if (primaryKey)
+         columnsSql.push(`CONSTRAINT "${primaryKey.name}" PRIMARY KEY (${primaryKey.column})`);
+
       // Table sequences
       for (let sequence of sequences) {
          if (sequence.includes('.')) sequence = sequence.split('.')[1];
@@ -749,25 +771,22 @@ export class PostgreSQLClient extends BaseClient {
    INCREMENT BY ${rows[0].increment}
    MINVALUE ${rows[0].minimum_value}
    MAXVALUE ${rows[0].maximum_value}
-   CACHE 1;\n`;
+   CACHE 1;\n\n`;
          }
       }
 
       // Table create
-      createSql += `\nCREATE TABLE "${schema}"."${table}"(
+      createSql += `CREATE TABLE "${schema}"."${table}"(
    ${columnsSql.join(',\n   ')}
 );\n`;
 
       // Table indexes
       createSql += '\n';
-      const { rows: indexes } = await this.select('*')
-         .schema('pg_catalog')
-         .from('pg_indexes')
-         .where({ schemaname: `= '${schema}'`, tablename: `= '${table}'` })
-         .run<{indexdef: string}>();
 
-      for (const index of indexes)
-         createSql += `${index.indexdef};\n`;
+      for (const index of remappedIndexes) {
+         if (index.type !== 'PRIMARY')
+            createSql += `CREATE ${index.type}${index.type === 'UNIQUE' ? ' INDEX' : ''} "${index.name}" ON "${schema}"."${table}" (${index.column});\n`;
+      }
 
       return createSql;
    }
@@ -869,6 +888,7 @@ export class PostgreSQLClient extends BaseClient {
       const newIndexes: string[] = [];
       const manageIndexes: string[] = [];
       const newForeigns: string[] = [];
+      const modifyComment: string[] = [];
 
       let sql = `CREATE TABLE "${schema}"."${options.name}"`;
 
@@ -884,6 +904,8 @@ export class PostgreSQLClient extends BaseClient {
             ${field.nullable ? 'NULL' : 'NOT NULL'}
             ${field.default !== null ? `DEFAULT ${field.default || '\'\''}` : ''}
             ${field.onUpdate ? `ON UPDATE ${field.onUpdate}` : ''}`);
+         if (field.comment != null)
+            modifyComment.push(`COMMENT ON COLUMN "${schema}"."${options.name}"."${field.name}" IS '${field.comment}'`);
       });
 
       // ADD INDEX
@@ -904,8 +926,12 @@ export class PostgreSQLClient extends BaseClient {
          newForeigns.push(`CONSTRAINT "${foreign.constraintName}" FOREIGN KEY ("${foreign.field}") REFERENCES "${schema}"."${foreign.refTable}" ("${foreign.refField}") ON UPDATE ${foreign.onUpdate} ON DELETE ${foreign.onDelete}`);
       });
 
-      sql = `${sql} (${[...newColumns, ...newIndexes, ...newForeigns].join(', ')})`;
-      if (manageIndexes.length) sql = `${sql}; ${manageIndexes.join(';')}`;
+      sql = `${sql} (${[...newColumns, ...newIndexes, ...newForeigns].join(', ')}); `;
+      if (manageIndexes.length) sql = `${sql} ${manageIndexes.join(';')}; `;
+      // TABLE COMMENT
+      if (options.comment != null) sql = `${sql} COMMENT ON TABLE "${schema}"."${options.name}" IS '${options.comment}'; `;
+      // FIELDS COMMENT
+      if (modifyComment.length) sql = `${sql} ${modifyComment.join(';')}; `;
 
       return await this.raw(sql);
    }
@@ -930,6 +956,7 @@ export class PostgreSQLClient extends BaseClient {
       const renameColumns: string[] = [];
       const createSequences: string[] = [];
       const manageIndexes: string[] = [];
+      const modifyComment: string[] = [];
 
       // ADD FIELDS
       additions.forEach(addition => {
@@ -943,6 +970,8 @@ export class PostgreSQLClient extends BaseClient {
             ${addition.nullable ? 'NULL' : 'NOT NULL'}
             ${addition.default !== null ? `DEFAULT ${addition.default || '\'\''}` : ''}
             ${addition.onUpdate ? `ON UPDATE ${addition.onUpdate}` : ''}`);
+         if (addition.comment != null)
+            modifyComment.push(`COMMENT ON COLUMN "${schema}"."${table}"."${addition.name}" IS '${addition.comment}'`);
       });
 
       // ADD INDEX
@@ -995,6 +1024,8 @@ export class PostgreSQLClient extends BaseClient {
 
          if (change.orgName !== change.name)
             renameColumns.push(`ALTER TABLE "${schema}"."${table}" RENAME COLUMN "${change.orgName}" TO "${change.name}"`);
+         if (change.comment != null)
+            modifyComment.push(`COMMENT ON COLUMN "${schema}"."${table}"."${change.name}" IS '${change.comment}'`);
       });
 
       // CHANGE INDEX
@@ -1042,8 +1073,11 @@ export class PostgreSQLClient extends BaseClient {
       if (alterColumns.length) sql += `ALTER TABLE "${schema}"."${table}" ${alterColumns.join(', ')}; `;
       if (createSequences.length) sql = `${createSequences.join(';')}; ${sql}`;
       if (manageIndexes.length) sql = `${manageIndexes.join(';')}; ${sql}`;
+      // TABLE COMMENT
+      if (options.comment != null) sql = `${sql} COMMENT ON TABLE "${schema}"."${table}" IS '${options.comment}'; `;
+      // FIELDS COMMENT
+      if (modifyComment.length) sql = `${sql} ${modifyComment.join(';')}; `;
       if (options.name) sql += `ALTER TABLE "${schema}"."${table}" RENAME TO "${options.name}"; `;
-
       // RENAME
       if (renameColumns.length) sql = `${renameColumns.join(';')}; ${sql}`;
 
@@ -1219,9 +1253,9 @@ export class PostgreSQLClient extends BaseClient {
       return results.rows.map(async row => {
          if (!row.pg_get_functiondef) {
             return {
-               definer: null,
+               definer: null as null,
                sql: '',
-               parameters: [],
+               parameters: [] as null[],
                name: routine,
                comment: '',
                security: 'DEFINER',
@@ -1270,8 +1304,8 @@ export class PostgreSQLClient extends BaseClient {
             name: routine,
             comment: '',
             security: row.pg_get_functiondef.includes('SECURITY DEFINER') ? 'DEFINER' : 'INVOKER',
-            deterministic: null,
-            dataAccess: null,
+            deterministic: null as null,
+            dataAccess: null as null,
             language: row.pg_get_functiondef.match(/(?<=LANGUAGE )(.*)(?<=[\S+\n\r\s])/gm)[0]
          };
       })[0];
@@ -1335,9 +1369,9 @@ export class PostgreSQLClient extends BaseClient {
       return results.rows.map(async row => {
          if (!row.pg_get_functiondef) {
             return {
-               definer: null,
+               definer: null as null,
                sql: '',
-               parameters: [],
+               parameters: [] as null[],
                name: func,
                comment: '',
                security: 'DEFINER',
@@ -1385,8 +1419,8 @@ export class PostgreSQLClient extends BaseClient {
             name: func,
             comment: '',
             security: row.pg_get_functiondef.includes('SECURITY DEFINER') ? 'DEFINER' : 'INVOKER',
-            deterministic: null,
-            dataAccess: null,
+            deterministic: null as null,
+            dataAccess: null as null,
             language: row.pg_get_functiondef.match(/(?<=LANGUAGE )(.*)(?<=[\S+\n\r\s])/gm)[0],
             returns: row.pg_get_functiondef.match(/(?<=RETURNS )(.*)(?<=[\S+\n\r\s])/gm)[0].replace('SETOF ', '').toUpperCase()
          };
@@ -1615,7 +1649,7 @@ export class PostgreSQLClient extends BaseClient {
    }
 
    async raw<T = antares.QueryResult> (sql: string, args?: antares.QueryParams) {
-      this._logger({ cUid: this._cUid, sql });
+      this._logger({ cUid: this._cUid, content: sql, level: 'query' });
 
       args = {
          nest: false,
@@ -1627,14 +1661,12 @@ export class PostgreSQLClient extends BaseClient {
       };
 
       if (!args.comments)
-         sql = sql.replace(/(\/\*(.|[\r\n])*?\*\/)|(--(.*|[\r\n]))/gm, '');// Remove comments
+         sql = removeComments(sql);
 
       const resultsArr: antares.QueryResult[] = [];
       let paramsArr = [];
       const queries = args.split
-         ? sql.split(/(?!\B'[^']*);(?![^']*'\B)/gm)
-            .filter(Boolean)
-            .map(q => q.trim())
+         ? this._querySplitter(sql, 'pg')
          : [sql];
 
       let connection: pg.Client | pg.PoolClient;

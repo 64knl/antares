@@ -121,7 +121,7 @@
                <summary
                   class="accordion-header misc-name"
                   :class="{'text-bold': breadcrumbs.schema === database.name && breadcrumbs.trigger}"
-                  @contextmenu.prevent="showMiscFolderContext($event, 'materializedview')"
+                  @contextmenu.prevent="showMiscFolderContext($event, 'materializedView')"
                >
                   <BaseIcon
                      class="misc-icon mr-1"
@@ -133,7 +133,7 @@
                      icon-name="mdiFolderOpen"
                      :size="18"
                   />
-                  {{ t('database.materializedview', 2) }}
+                  {{ t('database.materializedView', 2) }}
                </summary>
                <div class="accordion-body">
                   <div>
@@ -477,8 +477,12 @@ const searchTerm = computed(() => {
 });
 
 const filteredTables = computed(() => {
-   if (props.searchMethod === 'elements')
-      return props.database.tables.filter(table => table.name.search(searchTerm.value) >= 0 && table.type === 'table');
+   if (props.searchMethod === 'elements') {
+      const searchTermLower = searchTerm.value.toLowerCase();
+      return props.database.tables.filter(table =>
+         table.name.toLowerCase().includes(searchTermLower) && table.type === 'table'
+      );
+   }
    else
       return props.database.tables;
 });
@@ -492,9 +496,9 @@ const filteredViews = computed(() => {
 
 const filteredMatViews = computed(() => {
    if (props.searchMethod === 'elements')
-      return props.database.tables.filter(table => table.name.search(searchTerm.value) >= 0 && table.type === 'materializedview');
+      return props.database.tables.filter(table => table.name.search(searchTerm.value) >= 0 && table.type === 'materializedView');
    else
-      return props.database.tables.filter(table => table.type === 'materializedview');
+      return props.database.tables.filter(table => table.type === 'materializedView');
 });
 
 const filteredTriggers = computed(() => {

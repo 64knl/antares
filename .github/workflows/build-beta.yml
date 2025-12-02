@@ -19,17 +19,19 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with: 
           ref: beta
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       
       - name: Install dependencies
-        run: npm i
+        run: | 
+          npm i
+          npm install "dmg-license" --save-optional
         
       - name: "Build"
         run: npm run build

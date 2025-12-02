@@ -183,6 +183,7 @@ export default (connections: Record<string, antares.Client>) => {
          const result = await connections[uid].raw(query, {
             nest: true,
             details: true,
+            comments: false,
             schema,
             tabUid,
             autocommit
@@ -251,7 +252,7 @@ export default (connections: Record<string, antares.Client>) => {
                      setTimeout(() => { // Ensures that writing thread has finished
                         exporter?.terminate();
                         exporter = null;
-                     }, 2000);
+                     }, 500);
                      resolve({ status: 'success', response: payload });
                      break;
                   case 'cancel':

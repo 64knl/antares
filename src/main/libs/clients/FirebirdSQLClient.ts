@@ -1,6 +1,7 @@
 import dataTypes from 'common/data-types/firebird';
 import { FLOAT, NUMBER } from 'common/fieldTypes';
 import * as antares from 'common/interfaces/antares';
+import { removeComments } from 'common/libs/sqlUtils';
 import * as firebird from 'node-firebird';
 import * as path from 'path';
 
@@ -107,6 +108,10 @@ export class FirebirdSQLClient extends BaseClient {
 
    getConnectionPool () {
       return firebird.pool(this._poolSize, { ...this._params, blobAsText: true });
+   }
+
+   ping () {
+      return this.raw('SELECT rdb$get_context(\'SYSTEM\', \'DB_NAME\') FROM rdb$database');
    }
 
    destroy () {
@@ -241,10 +246,10 @@ export class FirebirdSQLClient extends BaseClient {
             name: db.name,
             size: schemaSize,
             tables: remappedTables,
-            functions: [],
+            functions: [] as null[],
             procedures: remappedProcedures,
             triggers: remappedTriggers,
-            schedulers: []
+            schedulers: [] as null[]
          };
       });
    }
@@ -333,7 +338,7 @@ export class FirebirdSQLClient extends BaseClient {
 
          return {
             name: field.FIELD_NAME.trim(),
-            key: null,
+            key: null as null,
             type: fieldType,
             schema: schema,
             table: table,
@@ -342,14 +347,14 @@ export class FirebirdSQLClient extends BaseClient {
             datePrecision: field.FIELD_NAME.trim() === 'TIMESTAMP' ? 4 : null,
             charLength: ![...NUMBER, ...FLOAT].includes(fieldType) ? field.FIELD_LENGTH : null,
             nullable: !field.NOT_NULL,
-            unsigned: null,
-            zerofill: null,
+            unsigned: null as null,
+            zerofill: null as null,
             order: field.FIELD_POSITION+1,
             default: defaultValue,
             charset: field.CHARSET,
-            collation: null,
+            collation: null as null,
             autoIncrement: false,
-            onUpdate: null,
+            onUpdate: null as null,
             comment: field.DESCRIPTION?.trim()
          };
       });
@@ -453,7 +458,7 @@ export class FirebirdSQLClient extends BaseClient {
             table: table,
             field: field.FKCOLUMN_NAME.trim(),
             position: field.KEY_SEQ,
-            constraintPosition: null,
+            constraintPosition: null as null,
             constraintName: field.FK_NAME.trim(),
             refSchema: schema,
             refTable: field.PKTABLE_NAME.trim(),
@@ -1020,7 +1025,7 @@ export class FirebirdSQLClient extends BaseClient {
          alias: string;
        }
 
-      this._logger({ cUid: this._cUid, sql });
+      this._logger({ cUid: this._cUid, content: sql, level: 'query' });
 
       args = {
          nest: false,
@@ -1032,14 +1037,12 @@ export class FirebirdSQLClient extends BaseClient {
       };
 
       if (!args.comments)
-         sql = sql.replace(/(\/\*(.|[\r\n])*?\*\/)|(--(.*|[\r\n]))/gm, '');// Remove comments
+         sql = removeComments(sql);
 
       const resultsArr = [];
       let paramsArr = [];
       const queries = args.split
-         ? sql.split(/((?:[^;'"]*(?:"(?:\\.|[^"])*"|'(?:\\.|[^'])*')[^;'"]*)+)|;/gm)
-            .filter(Boolean)
-            .map(q => q.trim())
+         ? this._querySplitter(sql, 'firebird')
          : [sql];
 
       let connection: firebird.Database | firebird.Transaction;

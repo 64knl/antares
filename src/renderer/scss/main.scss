@@ -20,6 +20,7 @@
 
 body {
   user-select: none;
+  background-color: #000;
 }
 
 a {
@@ -256,6 +257,10 @@ option:checked {
     }
 
     &.active {
+      a {
+        border-bottom-color: transparent;
+      }
+
       .tab-link {
         border-color: transparent;
       }

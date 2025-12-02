@@ -2,9 +2,12 @@ import SSH2Promise = require('@fabio286/ssh2-promise');
 import SSHConfig from '@fabio286/ssh2-promise/lib/sshConfig';
 import dataTypes from 'common/data-types/mysql';
 import * as antares from 'common/interfaces/antares';
+import { removeComments } from 'common/libs/sqlUtils';
 import * as mysql from 'mysql2/promise';
 
+import * as EncodingToCharset from '../../../../node_modules/mysql2/lib/constants/encoding_charset.js';
 import { BaseClient } from './BaseClient';
+EncodingToCharset.utf8mb3 = 192; // To fix https://github.com/sidorares/node-mysql2/issues/1398 until not included in mysql2
 
 export class MySQLClient extends BaseClient {
    private _schema?: string;
@@ -161,6 +164,8 @@ export class MySQLClient extends BaseClient {
 
             this._ssh = new SSH2Promise({
                ...this._params.ssh,
+               reconnect: true,
+               reconnectTries: 3,
                debug: process.env.NODE_ENV !== 'production' ? (s) => console.log(s) : null
             });
 
@@ -169,13 +174,13 @@ export class MySQLClient extends BaseClient {
                remotePort: this._params.port
             });
 
-            dbConfig.host = (this._ssh.config as SSHConfig[] & { host: string }).host;
+            dbConfig.host = undefined;
             dbConfig.port = tunnel.localPort;
          }
          catch (err) {
             if (this._ssh) {
-               this._ssh.close();
                this._ssh.closeTunnel();
+               this._ssh.close();
             }
             throw err;
          }
@@ -214,13 +219,17 @@ export class MySQLClient extends BaseClient {
       }
    }
 
+   ping () {
+      return this.select('1+1').run();
+   }
+
    destroy () {
       this._connection.end();
       clearInterval(this._keepaliveTimer);
       this._keepaliveTimer = undefined;
       if (this._ssh) {
-         this._ssh.close();
          this._ssh.closeTunnel();
+         this._ssh.close();
       }
    }
 
@@ -228,12 +237,13 @@ export class MySQLClient extends BaseClient {
       const dbConfig = await this.getDbConfig();
       const connection = await mysql.createConnection({
          ...dbConfig,
-         typeCast: (field, next) => {
-            if (field.type === 'DATETIME')
-               return field.string();
-            else
-               return next();
-         }
+         dateStrings: true
+         // typeCast: (field, next) => {
+         //    if (field.type === 'DATETIME')
+         //       return field.string();
+         //    else
+         //       return next();
+         // }
       });
 
       return connection;
@@ -245,12 +255,13 @@ export class MySQLClient extends BaseClient {
          ...dbConfig,
          connectionLimit: this._poolSize,
          enableKeepAlive: true,
-         typeCast: (field, next) => {
-            if (field.type === 'DATETIME')
-               return field.string();
-            else
-               return next();
-         }
+         dateStrings: true
+         // typeCast: (field, next) => {
+         //    if (field.type === 'DATETIME')
+         //       return field.string();
+         //    else
+         //       return next();
+         // }
       });
 
       this._keepaliveTimer = setInterval(async () => {
@@ -292,6 +303,8 @@ export class MySQLClient extends BaseClient {
             await this.connect();
             return this.getConnection(args, true);
          }
+         else if (error instanceof AggregateError)
+            throw new Error(error.errors.reduce((acc, curr) => acc +' | '+ curr.message, ''));
          else
             throw new Error(error.message);
       }
@@ -348,10 +361,21 @@ export class MySQLClient extends BaseClient {
       if (this._params.schema)
          filteredDatabases = filteredDatabases.filter(db => db.Database === this._params.schema);
 
-      const { rows: functions } = await this.raw('SHOW FUNCTION STATUS');
-      const { rows: procedures } = await this.raw('SHOW PROCEDURE STATUS');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      let functions: any[] = [];
+      let procedures: any[] = [];
       let schedulers: any[] = [];
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+
+      try {
+         const { rows: functionRows } = await this.raw('SHOW FUNCTION STATUS');
+         const { rows: procedureRows } = await this.raw('SHOW PROCEDURE STATUS');
+         functions = functionRows;
+         procedures = procedureRows;
+      }
+      catch (err) {
+         this._logger({ content: err.sqlMessage, cUid: this._cUid, level: 'error' });
+      }
 
       try { // Avoid exception with event_scheduler DISABLED with MariaDB 10
          const { rows } = await this.raw('SELECT *, EVENT_SCHEMA AS `Db`, EVENT_NAME AS `Name` FROM information_schema.`EVENTS`');
@@ -657,7 +681,7 @@ export class MySQLClient extends BaseClient {
             charset: field.CHARACTER_SET_NAME,
             collation: field.COLLATION_NAME,
             autoIncrement: field.EXTRA.includes('auto_increment'),
-            generated: field.EXTRA.toLowerCase().includes('generated'),
+            generated: ['VIRTUAL GENERATED', 'VIRTUAL STORED'].includes(field.EXTRA),
             onUpdate: field.EXTRA.toLowerCase().includes('on update')
                ? field.EXTRA.substr(field.EXTRA.indexOf('on update') + 9, field.EXTRA.length).trim()
                : '',
@@ -670,6 +694,39 @@ export class MySQLClient extends BaseClient {
       const { rows } = await this.raw(`SELECT table_rows "count" FROM information_schema.tables WHERE table_name = "${table}" AND table_schema = "${schema}"`);
 
       return rows.length ? rows[0].count : 0;
+   }
+
+   async getTableChecks ({ schema, table }: { schema: string; table: string }): Promise<antares.TableCheck[] | false> {
+      const { rows: checkTableExists } = await this.raw('SELECT table_name FROM information_schema.tables WHERE table_schema = "information_schema" AND table_name = "CHECK_CONSTRAINTS"');
+
+      if (!checkTableExists.length)// check if CHECK_CONSTRAINTS table exists
+         return false;
+
+      const { rows } = await this.raw(`
+            SELECT 
+               CONSTRAINT_NAME as name, 
+               CHECK_CLAUSE as clausole 
+            FROM information_schema.CHECK_CONSTRAINTS 
+            WHERE CONSTRAINT_SCHEMA = "${schema}" 
+            AND CONSTRAINT_NAME IN (
+               SELECT
+                  CONSTRAINT_NAME
+               FROM
+                  information_schema.TABLE_CONSTRAINTS
+               WHERE
+                  TABLE_SCHEMA = "${schema}"
+                  AND TABLE_NAME = "${table}"
+                  AND CONSTRAINT_TYPE = 'CHECK'
+            )
+         `);
+
+      if (rows.length) {
+         return rows.map(row => ({
+            name: row.name,
+            clause: row.clausole
+         }));
+      }
+      return [];
    }
 
    async getTableOptions ({ schema, table }: { schema: string; table: string }) {
@@ -848,11 +905,13 @@ export class MySQLClient extends BaseClient {
          fields,
          foreigns,
          indexes,
+         checks,
          options
       } = params;
       const newColumns: string[] = [];
       const newIndexes: string[] = [];
       const newForeigns: string[] = [];
+      const newChecks: string[] = [];
 
       let sql = `CREATE TABLE \`${schema}\`.\`${options.name}\``;
 
@@ -893,7 +952,13 @@ export class MySQLClient extends BaseClient {
          newForeigns.push(`CONSTRAINT \`${foreign.constraintName}\` FOREIGN KEY (\`${foreign.field}\`) REFERENCES \`${foreign.refTable}\` (\`${foreign.refField}\`) ON UPDATE ${foreign.onUpdate} ON DELETE ${foreign.onDelete}`);
       });
 
-      sql = `${sql} (${[...newColumns, ...newIndexes, ...newForeigns].join(', ')}) COMMENT='${options.comment}', COLLATE='${options.collation}', ENGINE=${options.engine}`;
+      // ADD TABLE CHECKS
+      checks.forEach(check => {
+         if (!check.clause.trim().length) return;
+         newChecks.push(`${check.name ? `CONSTRAINT \`${check.name}\` ` : ''}CHECK (${check.clause})`);
+      });
+
+      sql = `${sql} (${[...newColumns, ...newIndexes, ...newForeigns, ...newChecks].join(', ')}) COMMENT='${options.comment}', COLLATE='${options.collation}', ENGINE=${options.engine}`;
 
       return await this.raw(sql);
    }
@@ -907,6 +972,7 @@ export class MySQLClient extends BaseClient {
          changes,
          indexChanges,
          foreignChanges,
+         checkChanges,
          options
       } = params;
 
@@ -914,6 +980,7 @@ export class MySQLClient extends BaseClient {
       const alterColumnsAdd: string[] = [];
       const alterColumnsChange: string[] = [];
       const alterColumnsDrop: string[] = [];
+      const alterQueryes: string[] = [];
 
       // OPTIONS
       if ('comment' in options) alterColumnsChange.push(`COMMENT='${options.comment}'`);
@@ -959,6 +1026,12 @@ export class MySQLClient extends BaseClient {
          alterColumnsAdd.push(`ADD CONSTRAINT \`${addition.constraintName}\` FOREIGN KEY (\`${addition.field}\`) REFERENCES \`${addition.refTable}\` (\`${addition.refField}\`) ON UPDATE ${addition.onUpdate} ON DELETE ${addition.onDelete}`);
       });
 
+      // ADD TABLE CHECKS
+      checkChanges.additions.forEach(addition => {
+         if (!addition.clause.trim().length) return;
+         alterColumnsAdd.push(`ADD ${addition.name ? `CONSTRAINT \`${addition.name}\` ` : ''}CHECK (${addition.clause})`);
+      });
+
       // CHANGE FIELDS
       changes.forEach(change => {
          const typeInfo = this.getTypeInfo(change.type);
@@ -970,9 +1043,9 @@ export class MySQLClient extends BaseClient {
             ${change.zerofill ? 'ZEROFILL' : ''}
             ${change.nullable ? 'NULL' : 'NOT NULL'}
             ${change.autoIncrement ? 'AUTO_INCREMENT' : ''}
+            ${change.collation ? `COLLATE ${change.collation}` : ''}
             ${change.default !== null ? `DEFAULT ${change.default || '\'\''}` : ''}
             ${change.comment ? `COMMENT '${change.comment}'` : ''}
-            ${change.collation ? `COLLATE ${change.collation}` : ''}
             ${change.onUpdate ? `ON UPDATE ${change.onUpdate}` : ''}
             ${change.after ? `AFTER \`${change.after}\`` : 'FIRST'}`);
       });
@@ -1003,6 +1076,13 @@ export class MySQLClient extends BaseClient {
          alterColumnsChange.push(`ADD CONSTRAINT \`${change.constraintName}\` FOREIGN KEY (\`${change.field}\`) REFERENCES \`${change.refTable}\` (\`${change.refField}\`) ON UPDATE ${change.onUpdate} ON DELETE ${change.onDelete}`);
       });
 
+      // CHANGE CHECK TABLE
+      checkChanges.changes.forEach(change => {
+         if (!change.clause.trim().length) return;
+         alterQueryes.push(`${sql} DROP CONSTRAINT \`${change.name}\``);
+         alterQueryes.push(`${sql} ADD ${change.name ? `CONSTRAINT \`${change.name}\` ` : ''}CHECK (${change.clause})`);
+      });
+
       // DROP FIELDS
       deletions.forEach(deletion => {
          alterColumnsDrop.push(`DROP COLUMN \`${deletion.name}\``);
@@ -1021,7 +1101,11 @@ export class MySQLClient extends BaseClient {
          alterColumnsDrop.push(`DROP FOREIGN KEY \`${deletion.constraintName}\``);
       });
 
-      const alterQueryes = [];
+      // DROP CHECK TABLE
+      checkChanges.deletions.forEach(deletion => {
+         alterQueryes.push(`${sql} DROP CONSTRAINT \`${deletion.name}\``);
+      });
+
       if (alterColumnsAdd.length) alterQueryes.push(sql+alterColumnsAdd.join(', '));
       if (alterColumnsChange.length) alterQueryes.push(sql+alterColumnsChange.join(', '));
       if (alterColumnsDrop.length) alterQueryes.push(sql+alterColumnsDrop.join(', '));
@@ -1661,7 +1745,7 @@ export class MySQLClient extends BaseClient {
    }
 
    async raw<T = antares.QueryResult> (sql: string, args?: antares.QueryParams) {
-      this._logger({ cUid: this._cUid, sql });
+      this._logger({ cUid: this._cUid, content: sql, level: 'query' });
 
       args = {
          nest: false,
@@ -1673,15 +1757,13 @@ export class MySQLClient extends BaseClient {
       };
 
       if (!args.comments)
-         sql = sql.replace(/(\/\*(.|[\r\n])*?\*\/)|(--(.*|[\r\n]))/gm, '');// Remove comments
+         sql = removeComments(sql);
 
       const nestTables = args.nest ? '.' : false;
       const resultsArr: antares.QueryResult[] = [];
       let paramsArr = [];
       const queries = args.split
-         ? sql.split(/((?:[^;'"]*(?:"(?:\\.|[^"])*"|'(?:\\.|[^'])*')[^;'"]*)+)|;/gm)
-            .filter(Boolean)
-            .map(q => q.trim())
+         ? this._querySplitter(sql, 'mysql')
          : [sql];
 
       const connection = await this.getConnection(args);
@@ -1697,9 +1779,10 @@ export class MySQLClient extends BaseClient {
             connection.query({ sql: query, nestTables }).then(async ([response, fields]) => {
                timeStop = new Date();
                const queryResult = response;
+               const fieldsArr = fields ? Array.isArray(fields[0]) ? fields[0] : fields : false;// Some times fields are nested in an array
 
-               let remappedFields = fields
-                  ? fields.map(field => {
+               let remappedFields = fieldsArr
+                  ? fieldsArr.map(field => {
                      if (!field || Array.isArray(field))
                         return undefined;
 
@@ -1768,7 +1851,7 @@ export class MySQLClient extends BaseClient {
 
                resolve({
                   duration: timeStop.getTime() - timeStart.getTime(),
-                  rows: Array.isArray(queryResult) ? queryResult.some(el => Array.isArray(el)) ? [] : queryResult : false,
+                  rows: Array.isArray(queryResult) ? queryResult.some(el => Array.isArray(el)) ? queryResult[0] : queryResult : false,
                   report: !Array.isArray(queryResult) ? queryResult : false,
                   fields: remappedFields,
                   keys: keysArr

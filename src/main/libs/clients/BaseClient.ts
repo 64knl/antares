@@ -1,17 +1,10 @@
 import * as antares from 'common/interfaces/antares';
+import { querySplitter } from 'common/libs/sqlUtils';
 import mysql from 'mysql2/promise';
 import * as pg from 'pg';
 import SSH2Promise = require('@fabio286/ssh2-promise');
 
-const queryLogger = ({ sql, cUid }: {sql: string; cUid: string}) => {
-   // Remove comments, newlines and multiple spaces
-   const escapedSql = sql.replace(/(\/\*(.|[\r\n])*?\*\/)|(--(.*|[\r\n]))/gm, '').replace(/\s\s+/g, ' ');
-   if (process.type !== undefined) {
-      const mainWindow = require('electron').webContents.fromId(1);
-      mainWindow.send('query-log', { cUid, sql: escapedSql, date: new Date() });
-   }
-   if (process.env.NODE_ENV === 'development' && process.type === 'browser') console.log(escapedSql);
-};
+import { ipcLogger, LoggerLevel } from '../misc/ipcLogger';
 
 /**
  * As Simple As Possible Query Builder Core
@@ -22,7 +15,8 @@ export abstract class BaseClient {
    protected _params: mysql.ConnectionOptions | pg.ClientConfig | { databasePath: string; readonly: boolean};
    protected _poolSize: number;
    protected _ssh?: SSH2Promise;
-   protected _logger: (args: {sql: string; cUid: string}) => void;
+   protected _logger: (args: {content: string; cUid: string; level: LoggerLevel}) => void;
+   protected _querySplitter: (sql: string, client: antares.ClientCode) => string[];
    protected _queryDefaults: antares.QueryBuilderObject;
    protected _query: antares.QueryBuilderObject;
 
@@ -31,7 +25,8 @@ export abstract class BaseClient {
       this._cUid = args.uid;
       this._params = args.params;
       this._poolSize = args.poolSize || undefined;
-      this._logger = args.logger || queryLogger;
+      this._logger = args.logger || ipcLogger;
+      this._querySplitter = args.querySplitter || querySplitter;
 
       this._queryDefaults = {
          schema: '',
@@ -176,6 +171,10 @@ export abstract class BaseClient {
 
    dropSchema (...args: any) {
       throw new Error('Method "dropSchema" not implemented');
+   }
+
+   getTableChecks (...args: any) {
+      throw new Error('Method "getTableDll" not implemented');
    }
 
    getTableDll (...args: any) {

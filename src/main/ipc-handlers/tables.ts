@@ -3,7 +3,7 @@ import { ARRAY, BIT, BLOB, BOOLEAN, DATE, DATETIME, FLOAT, LONG_TEXT, NUMBER, TE
 import * as antares from 'common/interfaces/antares';
 import { InsertRowsParams } from 'common/interfaces/tableApis';
 import { fakerCustom } from 'common/libs/fakerCustom';
-import { sqlEscaper } from 'common/libs/sqlUtils';
+import { formatJsonForSqlWhere, sqlEscaper } from 'common/libs/sqlUtils';
 import { ipcMain } from 'electron';
 import * as fs from 'fs';
 import * as moment from 'moment';
@@ -87,6 +87,19 @@ export default (connections: Record<string, antares.Client>) => {
       }
    });
 
+   ipcMain.handle('get-table-checks', async (event, params) => {
+      if (!validateSender(event.senderFrame)) return { status: 'error', response: 'Unauthorized process' };
+
+      try {
+         const result = await connections[params.uid].getTableChecks(params);
+
+         return { status: 'success', response: result };
+      }
+      catch (err) {
+         return { status: 'error', response: err.toString() };
+      }
+   });
+
    ipcMain.handle('get-table-ddl', async (event, params) => {
       if (!validateSender(event.senderFrame)) return { status: 'error', response: 'Unauthorized process' };
 
@@ -122,7 +135,7 @@ export default (connections: Record<string, antares.Client>) => {
       try { // TODO: move to client classes
          let escapedParam;
          let reload = false;
-         const id = typeof params.id === 'number' ? params.id : `${sw}${params.id}${sw}`;
+         const id = typeof params.id === 'number' ? params.id : `${sw}${sqlEscaper(params.id)}${sw}`;
 
          if ([...NUMBER, ...FLOAT].includes(params.type))
             escapedParam = params.content;
@@ -220,9 +233,10 @@ export default (connections: Record<string, antares.Client>) => {
 
             for (const key in orgRow) {
                if (typeof orgRow[key] === 'string')
-                  orgRow[key] = `'${orgRow[key]}'`;
-
-               if (orgRow[key] === null)
+                  orgRow[key] = ` = '${sqlEscaper(orgRow[key])}'`;
+               else if (typeof orgRow[key] === 'object' && orgRow[key] !== null)
+                  orgRow[key] = formatJsonForSqlWhere(orgRow[key], connections[params.uid]._client);
+               else if (orgRow[key] === null)
                   orgRow[key] = `IS ${orgRow[key]}`;
                else
                   orgRow[key] = `= ${orgRow[key]}`;
@@ -276,7 +290,7 @@ export default (connections: Record<string, antares.Client>) => {
             for (const row of params.rows) {
                for (const key in row) {
                   if (typeof row[key] === 'string')
-                     row[key] = `'${row[key]}'`;
+                     row[key] = `'${sqlEscaper(row[key])}'`;
 
                   if (row[key] === null)
                      row[key] = 'IS NULL';
@@ -426,16 +440,17 @@ export default (connections: Record<string, antares.Client>) => {
 
    ipcMain.handle('get-foreign-list', async (event, { uid, schema, table, column, description }) => {
       if (!validateSender(event.senderFrame)) return { status: 'error', response: 'Unauthorized process' };
+      const { elementsWrapper: ew } = customizations[connections[uid]._client];
 
       try {
          const query = connections[uid]
-            .select(`${column} AS foreign_column`)
+            .select(`${ew}${column}${ew} AS foreign_column`)
             .schema(schema)
             .from(table)
             .orderBy('foreign_column ASC');
 
          if (description)
-            query.select(`LEFT(${description}, 20) AS foreign_description`);
+            query.select(`LEFT(${ew}${description}${ew}, 20) AS foreign_description`);
 
          const results = await query.run<Record<string, string>>();
 

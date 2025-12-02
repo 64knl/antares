@@ -103,7 +103,7 @@ import { useI18n } from 'vue-i18n';
 import BaseIcon from '@/components/BaseIcon.vue';
 import BaseUploadInput from '@/components/BaseUploadInput.vue';
 import { unproxify } from '@/libs/unproxify';
-import { SidebarElement, useConnectionsStore } from '@/stores/connections';
+import { CustomIcon, SidebarElement, useConnectionsStore } from '@/stores/connections';
 import { useNotificationsStore } from '@/stores/notifications';
 
 const { t } = useI18n();
@@ -156,6 +156,7 @@ const importData = () => {
             const importObj: {
                connections: ConnectionParams[];
                connectionsOrder: SidebarElement[];
+               customIcons: CustomIcon[];
             } = JSON.parse(decrypt(hash, options.value.passkey));
 
             if (options.value.ignoreDuplicates) {
@@ -205,7 +206,6 @@ const importData = () => {
                      .includes(c.uid) ||
                      (c.isFolder && c.connections.every(c => newConnectionsUid.includes(c))));
             }
-
             importConnections(importObj);
 
             addNotification({
@@ -215,6 +215,7 @@ const importData = () => {
             closeModal();
          }
          catch (error) {
+            console.error(error);
             addNotification({
                status: 'error',
                message: t('application.wrongImportPassword')
@@ -222,6 +223,7 @@ const importData = () => {
          }
       }
       catch (error) {
+         console.error(error);
          addNotification({
             status: 'error',
             message: t('application.wrongFileFormat')

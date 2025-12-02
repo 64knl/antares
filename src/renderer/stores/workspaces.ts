@@ -147,120 +147,142 @@ export const useWorkspacesStore = defineStore('workspaces', {
          else
             this.selectedWorkspace = uid;
       },
-      async connectWorkspace (connection: ConnectionParams & { pgConnString?: string }, mode?: string) {
+      async connectWorkspace (connection: ConnectionParams & { connString?: string }, args?: {mode?: string; signal?: AbortSignal}) {
          this.workspaces = (this.workspaces as Workspace[]).map(workspace => workspace.uid === connection.uid
             ? {
                ...workspace,
-               structure: [],
+               structure: [] as WorkspaceStructure[],
                breadcrumbs: {},
                loadedSchemas: new Set(),
                database: connection.database,
-               connectionStatus: mode === 'switch' ? 'connected' : 'connecting'
+               connectionStatus: args?.mode === 'switch' ? 'connected' : 'connecting'
             }
             : workspace);
 
          const connectionsStore = useConnectionsStore();
          const notificationsStore = useNotificationsStore();
          const settingsStore = useSettingsStore();
-
-         try {
-            const { status, response } = await Connection.connect(connection);
-
-            if (status === 'error') {
-               notificationsStore.addNotification({ status, message: response });
+         return new Promise((resolve, reject) => {
+            const abortHandler = () => {
                this.workspaces = (this.workspaces as Workspace[]).map(workspace => workspace.uid === connection.uid
                   ? {
                      ...workspace,
-                     structure: [],
+                     structure: [] as WorkspaceStructure[],
                      breadcrumbs: {},
                      loadedSchemas: new Set(),
-                     connectionStatus: 'failed'
+                     connectionStatus: 'disconnected'
                   }
                   : workspace);
-            }
-            else {
-               let clientCustomizations: Customizations;
-               const { updateLastConnection } = connectionsStore;
+               return reject(new Error('Connection aborted by user'));
+            };
 
-               updateLastConnection(connection.uid);
+            args?.signal?.addEventListener('abort', abortHandler);
 
-               switch (connection.client) {
-                  case 'mysql':
-                  case 'maria':
-                     clientCustomizations = customizations.mysql;
-                     break;
-                  case 'pg':
-                     clientCustomizations = customizations.pg;
-                     break;
-                  case 'sqlite':
-                     clientCustomizations = customizations.sqlite;
-                     break;
-                  case 'firebird':
-                     clientCustomizations = customizations.firebird;
-                     break;
-               }
-               const dataTypes = clientCustomizations.dataTypes;
-               const indexTypes = clientCustomizations.indexTypes;
+            (async () => {
+               try {
+                  const { status, response } = await Connection.connect(connection);
 
-               const { status, response: version } = await Schema.getVersion(connection.uid);
+                  if (status === 'error') {
+                     notificationsStore.addNotification({ status, message: response });
+                     this.workspaces = (this.workspaces as Workspace[]).map(workspace => workspace.uid === connection.uid
+                        ? {
+                           ...workspace,
+                           structure: [] as WorkspaceStructure[],
+                           breadcrumbs: {},
+                           loadedSchemas: new Set(),
+                           connectionStatus: 'failed'
+                        }
+                        : workspace);
 
-               if (status === 'error')
-                  notificationsStore.addNotification({ status, message: version });
-
-               // Check if Maria or MySQL
-               const isMySQL = version.name.includes('MySQL');
-               const isMaria = version.name.includes('Maria');
-
-               if (isMySQL && connection.client !== 'mysql') {
-                  const connProxy = Object.assign({}, connection);
-                  connProxy.client = 'mysql';
-                  connectionsStore.editConnection(connProxy);
-               }
-               else if (isMaria && connection.client === 'mysql') {
-                  const connProxy = Object.assign({}, connection);
-                  connProxy.client = 'maria';
-                  connectionsStore.editConnection(connProxy);
-               }
-
-               const cachedTabs: WorkspaceTab[] = settingsStore.restoreTabs ? persistentStore.get(connection.uid, []) as WorkspaceTab[] : [];
-
-               if (cachedTabs.length) {
-                  tabIndex[connection.uid] = cachedTabs.reduce((acc: number, curr) => {
-                     if (curr.index > acc) acc = curr.index;
-                     return acc;
-                  }, null);
-               }
-
-               const selectedTab = cachedTabs.length
-                  ? connection.database
-                     ? cachedTabs.filter(tab => tab.type === 'query' || tab.database === connection.database)[0]?.uid
-                     : cachedTabs[0].uid
-                  : null;
-
-               this.workspaces = (this.workspaces as Workspace[]).map(workspace => workspace.uid === connection.uid
-                  ? {
-                     ...workspace,
-                     client: connection.client,
-                     dataTypes,
-                     indexTypes,
-                     customizations: clientCustomizations,
-                     structure: response,
-                     connectionStatus: 'connected',
-                     tabs: cachedTabs,
-                     selectedTab,
-                     version
+                     return reject(new Error(response));
                   }
-                  : workspace);
+                  else if (status === 'abort')
+                     return reject(new Error('Connection aborted by user'));
+                  else {
+                     let clientCustomizations: Customizations;
+                     connectionsStore.updateLastConnection(connection.uid);
 
-               this.refreshCollations(connection.uid);
-               this.refreshVariables(connection.uid);
-               this.refreshEngines(connection.uid);
-               this.refreshUsers(connection.uid);
-            }
-         }
-         catch (err) {
-            notificationsStore.addNotification({ status: 'error', message: err.stack });
-         }
+                     switch (connection.client) {
+                        case 'mysql':
+                        case 'maria':
+                           clientCustomizations = customizations.mysql;
+                           break;
+                        case 'pg':
+                           clientCustomizations = customizations.pg;
+                           break;
+                        case 'sqlite':
+                           clientCustomizations = customizations.sqlite;
+                           break;
+                        case 'firebird':
+                           clientCustomizations = customizations.firebird;
+                           break;
+                     }
+                     const dataTypes = clientCustomizations.dataTypes;
+                     const indexTypes = clientCustomizations.indexTypes;
+
+                     const { status, response: version } = await Schema.getVersion(connection.uid);
+
+                     if (status === 'error')
+                        notificationsStore.addNotification({ status, message: version });
+
+                     // Check if Maria or MySQL
+                     const isMySQL = version.name.includes('MySQL');
+                     const isMaria = version.name.includes('Maria');
+
+                     if (isMySQL && connection.client !== 'mysql') {
+                        const connProxy = Object.assign({}, connection);
+                        connProxy.client = 'mysql';
+                        connectionsStore.editConnection(connProxy);
+                     }
+                     else if (isMaria && connection.client === 'mysql') {
+                        const connProxy = Object.assign({}, connection);
+                        connProxy.client = 'maria';
+                        connectionsStore.editConnection(connProxy);
+                     }
+
+                     const cachedTabs: WorkspaceTab[] = settingsStore.restoreTabs ? persistentStore.get(connection.uid, []) as WorkspaceTab[] : [];
+
+                     if (cachedTabs.length) {
+                        tabIndex[connection.uid] = cachedTabs.reduce((acc: number, curr) => {
+                           if (curr.index > acc) acc = curr.index;
+                           return acc;
+                        }, null);
+                     }
+
+                     const selectedTab = cachedTabs.length
+                        ? connection.database
+                           ? cachedTabs.filter(tab => tab.type === 'query' || tab.database === connection.database)[0]?.uid
+                           : cachedTabs[0].uid
+                        : null;
+
+                     this.workspaces = (this.workspaces as Workspace[]).map(workspace => workspace.uid === connection.uid
+                        ? {
+                           ...workspace,
+                           client: connection.client,
+                           dataTypes,
+                           indexTypes,
+                           customizations: clientCustomizations,
+                           structure: response,
+                           connectionStatus: 'connected',
+                           tabs: cachedTabs,
+                           selectedTab,
+                           version
+                        }
+                        : workspace);
+
+                     args?.signal?.removeEventListener('abort', abortHandler);
+                     this.refreshCollations(connection.uid);
+                     this.refreshVariables(connection.uid);
+                     this.refreshEngines(connection.uid);
+                     this.refreshUsers(connection.uid);
+                     resolve(true);
+                  }
+               }
+               catch (err) {
+                  notificationsStore.addNotification({ status: 'error', message: err.stack });
+               }
+            })();
+         });
       },
       async refreshStructure (uid: string) {
          const notificationsStore = useNotificationsStore();
@@ -394,7 +416,7 @@ export const useWorkspacesStore = defineStore('workspaces', {
          this.workspaces = (this.workspaces as Workspace[]).map(workspace => workspace.uid === uid
             ? {
                ...workspace,
-               structure: [],
+               structure: [] as WorkspaceStructure[],
                breadcrumbs: {},
                loadedSchemas: new Set(),
                connectionStatus: 'disconnected'
@@ -403,9 +425,9 @@ export const useWorkspacesStore = defineStore('workspaces', {
 
          this.selectTab({ uid, tab: 0 });
       },
-      async switchConnection (connection: ConnectionParams & { pgConnString?: string }) {
+      async switchConnection (connection: ConnectionParams & { connString?: string }) {
          await Connection.disconnect(connection.uid);
-         return this.connectWorkspace(connection, 'switch');
+         return this.connectWorkspace(connection, { mode: 'switch' });
       },
       addWorkspace (uid: string) {
          const workspace: Workspace = {

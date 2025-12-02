@@ -56,6 +56,7 @@
                      >
                         <BaseIcon
                            :icon-name="camelize(element.icon)"
+                           :type="element.hasCustomIcon ? 'custom' : 'mdi'"
                            :size="36"
                         />
                      </div>
@@ -93,6 +94,7 @@ import * as Draggable from 'vuedraggable';
 
 import BaseIcon from '@/components/BaseIcon.vue';
 import SettingBarConnectionsFolder from '@/components/SettingBarConnectionsFolder.vue';
+import { camelize } from '@/libs/camelize';
 import { SidebarElement, useConnectionsStore } from '@/stores/connections';
 import { useWorkspacesStore } from '@/stores/workspaces';
 
@@ -163,16 +165,6 @@ const getStatusBadge = (uid: string) => {
             return '';
       }
    }
-};
-
-const camelize = (text: string) => {
-   const textArr = text.split('-');
-   for (let i = 0; i < textArr.length; i++) {
-      if (i === 0) continue;
-      textArr[i] = textArr[i].charAt(0).toUpperCase() + textArr[i].slice(1);
-   }
-
-   return textArr.join('');
 };
 
 watch(() => dummyNested.value.length, () => {

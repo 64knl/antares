@@ -38,7 +38,7 @@
          <div class="thead">
             <div class="tr">
                <div
-                  v-for="(field, index) in fields"
+                  v-for="(field, index) in filteredFields"
                   :key="index"
                   class="th c-hand"
                   :title="`${field.type} ${fieldLength(field) ? `(${fieldLength(field)})` : ''}`"
@@ -284,13 +284,14 @@ const settingsStore = useSettingsStore();
 const consoleStore = useConsoleStore();
 const { getWorkspace } = useWorkspacesStore();
 
-const { dataTabLimit: pageSize, defaultCopyType } = storeToRefs(settingsStore);
+const { /* dataTabLimit: pageSize, */ defaultCopyType } = storeToRefs(settingsStore);
 
 const { consoleHeight } = storeToRefs(consoleStore);
 
 const props = defineProps({
    results: Array as Prop<QueryResult[]>,
    connUid: String,
+   isQuering: Boolean,
    mode: String as Prop<'table' | 'query'>,
    page: {
       type: Number,
@@ -356,32 +357,46 @@ const isSortable = computed(() => {
    return fields.value.every(field => field.name);
 });
 
-const isHardSort = computed(() => {
-   return props.mode === 'table' && localResults.value.length === pageSize.value;
-});
+// const isHardSort = computed(() => {
+//    return props.mode === 'table' && localResults.value.length === pageSize.value;
+// });
 
 const sortedResults = computed(() => {
-   if (currentSort.value[resultsetIndex.value] && !isHardSort.value) {
-      const sortObj = currentSort.value[resultsetIndex.value];
+   // if (currentSort.value[resultsetIndex.value] && !isHardSort.value) {
+   //    const sortObj = currentSort.value[resultsetIndex.value];
 
-      return [...localResults.value].sort((a: any, b: any) => {
-         let modifier = 1;
-         let valA = typeof a[sortObj.field] === 'string' ? a[sortObj.field].toLowerCase() : a[sortObj.field];
-         if (!isNaN(valA)) valA = Number(valA);
-         let valB = typeof b[sortObj.field] === 'string' ? b[sortObj.field].toLowerCase() : b[sortObj.field];
-         if (!isNaN(valB)) valB = Number(valB);
-         if (sortObj.dir === 'desc') modifier = -1;
-         if (valA < valB) return -1 * modifier;
-         if (valA > valB) return 1 * modifier;
-         return 0;
-      });
-   }
-   else
-      return localResults.value;
+   //    return [...localResults.value].sort((a: any, b: any) => {
+   //       const modifier = sortObj.dir === 'desc' ? -1 : 1;
+   //       let valA = a[sortObj.field];
+   //       let valB = b[sortObj.field];
+
+   //       // Handle null values
+   //       if (valA === null && valB !== null) return sortObj.dir === 'asc' ? -1 : 1;
+   //       if (valA !== null && valB === null) return sortObj.dir === 'asc' ? 1 : -1;
+   //       if (valA === null && valB === null) return 0;
+
+   //       valA = typeof valA === 'string' ? valA.toLowerCase() : valA;
+   //       valB = typeof valB === 'string' ? valB.toLowerCase() : valB;
+
+   //       if (typeof valA !== 'number' && !isNaN(valA)) valA = String(Number(valA));
+   //       if (typeof valB !== 'number' && !isNaN(valB)) valB = String(Number(valB));
+
+   //       if (valA < valB) return -1 * modifier;
+   //       if (valA > valB) return 1 * modifier;
+   //       return 0;
+   //    });
+   // }
+   // else
+   return localResults.value;
 });
 
 const resultsWithRows = computed(() => props.results.filter(result => result.rows.length));
 const fields = computed(() => resultsWithRows.value.length ? resultsWithRows.value[resultsetIndex.value].fields : []);
+const filteredFields = computed(() => fields.value.reduce((acc, cur) => {
+   if (acc.findIndex(f => JSON.stringify(f) === JSON.stringify(cur)))
+      acc.push(cur);
+   return acc;
+}, [] as TableField[]));
 const keyUsage = computed(() => resultsWithRows.value.length ? resultsWithRows.value[resultsetIndex.value].keys : []);
 
 const fieldsObj = computed(() => {
@@ -523,6 +538,7 @@ const closeContext = () => {
 };
 
 const showDeleteConfirmModal = (e: any) => {
+   if (e && e.code !== 'Delete') return;
    if (e && e.path && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.path[0].tagName))
       return;
    if (selectedRows.value.length === 0) return;
@@ -547,6 +563,7 @@ const deleteSelected = () => {
       table: getTable(resultsetIndex.value),
       rows
    };
+   console.log(params);
    emit('delete-selected', params);
 };
 
@@ -680,15 +697,15 @@ const fillCell = (event: { name: string; group: string; type: string }) => {
    }
 
    fakeValue = (fakerCustom as any)[event.group][event.name]();
-   if (['string', 'number'].includes(typeof fakeValue)) {
+   const isDateType = [...DATE, ...DATETIME].includes(selectedCell.value.type);
+   if (isDateType)
+      fakeValue = moment(fakeValue).format(`YYYY-MM-DD HH:mm:ss${datePrecision}`);
+   else if (['string', 'number'].includes(typeof fakeValue)) {
       if (typeof fakeValue === 'number')
          fakeValue = String(fakeValue);
-
       if (selectedCell.value.length)
          fakeValue = fakeValue.substring(0, selectedCell.value.length < 1024 ? Number(selectedCell.value.length) : 1024);
    }
-   else if ([...DATE, ...DATETIME].includes(selectedCell.value.type))
-      fakeValue = moment(fakeValue).format(`YYYY-MM-DD HH:mm:ss${datePrecision}`);
    else if (TIME.includes(selectedCell.value.type))
       fakeValue = moment(fakeValue).format(`HH:mm:ss${datePrecision}`);
 
@@ -790,7 +807,7 @@ const contextMenu = (event: MouseEvent, cell: any) => {
 };
 
 const sort = (field: TableField) => {
-   if (!isSortable.value) return;
+   if (!isSortable.value || props.isQuering) return;
 
    selectedRows.value = [];
    let fieldName = field.name;
@@ -812,12 +829,12 @@ const sort = (field: TableField) => {
       };
    }
 
-   if (isHardSort.value) {
-      emit('hard-sort', {
-         field: currentSort.value[resultsetIndex.value].field,
-         dir: currentSort.value[resultsetIndex.value].dir
-      });
-   }
+   // if (isHardSort.value) {
+   emit('hard-sort', {
+      field: currentSort.value[resultsetIndex.value].field,
+      dir: currentSort.value[resultsetIndex.value].dir
+   });
+   // }
 };
 
 const resetSort = () => {

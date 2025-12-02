@@ -2,6 +2,7 @@ import * as sqlite from 'better-sqlite3';
 import dataTypes from 'common/data-types/sqlite';
 import { DATETIME, FLOAT, NUMBER, TIME } from 'common/fieldTypes';
 import * as antares from 'common/interfaces/antares';
+import { removeComments } from 'common/libs/sqlUtils';
 
 import { BaseClient } from './BaseClient';
 
@@ -33,6 +34,10 @@ export class SQLiteClient extends BaseClient {
          fileMustExist: true,
          readonly: this._params.readonly
       });
+   }
+
+   ping () {
+      return this.select('1+1').run();
    }
 
    destroy () {
@@ -120,10 +125,10 @@ export class SQLiteClient extends BaseClient {
                name: db.name,
                size: schemaSize,
                tables: remappedTables,
-               functions: [],
-               procedures: [],
+               functions: [] as null[],
+               procedures: [] as null[],
                triggers: remappedTriggers,
-               schedulers: []
+               schedulers: [] as null[]
             };
          }
          else {
@@ -162,22 +167,22 @@ export class SQLiteClient extends BaseClient {
 
          return {
             name: field.name,
-            key: null,
+            key: null as null,
             type: type.trim(),
             schema: schema,
             table: table,
             numLength: [...NUMBER, ...FLOAT].includes(type) ? length : null,
-            datePrecision: null,
+            datePrecision: null as null,
             charLength: ![...NUMBER, ...FLOAT].includes(type) ? length : null,
             nullable: !field.notnull,
-            unsigned: null,
-            zerofill: null,
+            unsigned: null as null,
+            zerofill: null as null,
             order: typeof field.cid === 'string' ? +field.cid + 1 : field.cid + 1,
             default: field.dflt_value,
-            charset: null,
-            collation: null,
+            charset: null as null,
+            collation: null as null,
             autoIncrement: false,
-            onUpdate: null,
+            onUpdate: null as null,
             comment: ''
          };
       });
@@ -263,7 +268,7 @@ export class SQLiteClient extends BaseClient {
             table: table,
             field: field.from,
             position: field.id + 1,
-            constraintPosition: null,
+            constraintPosition: null as null,
             constraintName: field.id,
             refSchema: schema,
             refTable: field.table,
@@ -608,7 +613,7 @@ export class SQLiteClient extends BaseClient {
    }
 
    async raw<T = antares.QueryResult> (sql: string, args?: antares.QueryParams) {
-      this._logger({ cUid: this._cUid, sql });// TODO: replace BLOB content with a placeholder
+      this._logger({ cUid: this._cUid, content: sql, level: 'query' });// TODO: replace BLOB content with a placeholder
 
       args = {
          nest: false,
@@ -620,14 +625,12 @@ export class SQLiteClient extends BaseClient {
       };
 
       if (!args.comments)
-         sql = sql.replace(/(\/\*(.|[\r\n])*?\*\/)|(--(.*|[\r\n]))/gm, '');// Remove comments
+         sql = removeComments(sql);
 
       const resultsArr = [];
       let paramsArr = [];
       const queries = args.split
-         ? sql.split(/((?:[^;'"]*(?:"(?:\\.|[^"])*"|'(?:\\.|[^'])*')[^;'"]*)+)|;/gm)
-            .filter(Boolean)
-            .map(q => q.trim())
+         ? this._querySplitter(sql, 'sqlite')
          : [sql];
 
       let connection: sqlite.Database;

@@ -293,6 +293,78 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "zwei-c",
+      "name": "CHANG, CHIH WEI",
+      "avatar_url": "https://avatars.githubusercontent.com/u/55912811?v=4",
+      "profile": "https://github.com/zwei-c",
+      "contributions": [
+        "translation"
+      ]
+    },
+    {
+      "login": "mirrorb",
+      "name": "GaoChun",
+      "avatar_url": "https://avatars.githubusercontent.com/u/34116207?v=4",
+      "profile": "https://github.com/mirrorb",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "LeviEyal",
+      "name": "Eyal Levi",
+      "avatar_url": "https://avatars.githubusercontent.com/u/48846533?v=4",
+      "profile": "https://github.com/LeviEyal",
+      "contributions": [
+        "translation"
+      ]
+    },
+    {
+      "login": "SawGoD",
+      "name": "Nikita Karelikov",
+      "avatar_url": "https://avatars.githubusercontent.com/u/67802757?v=4",
+      "profile": "http://telegram.dog/SawGoD",
+      "contributions": [
+        "translation"
+      ]
+    },
+    {
+      "login": "carvalhods",
+      "name": "David Carvalho",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6569255?v=4",
+      "profile": "https://github.com/carvalhods",
+      "contributions": [
+        "platform"
+      ]
+    },
+    {
+      "login": "r4f4dev",
+      "name": "r4f4dev",
+      "avatar_url": "https://avatars.githubusercontent.com/u/65920592?v=4",
+      "profile": "https://github.com/r4f4dev",
+      "contributions": [
+        "translation"
+      ]
+    },
+    {
+      "login": "salvymc",
+      "name": "Salvatore Forino",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10051897?v=4",
+      "profile": "https://github.com/salvymc",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "JoseGonzalez84",
+      "name": "José González",
+      "avatar_url": "https://avatars.githubusercontent.com/u/16820141?v=4",
+      "profile": "https://gadev.com.es/",
+      "contributions": [
+        "translation"
+      ]
     }
   ],
   "contributorsPerLine": 7,

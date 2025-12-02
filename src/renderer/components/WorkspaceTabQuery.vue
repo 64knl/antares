@@ -15,6 +15,7 @@
             :schema="breadcrumbsSchema"
             :is-selected="isSelected"
             :height="editorHeight"
+            editor-classes="editor-query"
          />
          <div ref="resizer" class="query-area-resizer" />
          <div ref="queryAreaFooter" class="workspace-query-runner-footer">
@@ -253,6 +254,7 @@
             v-if="results"
             v-show="!isQuering"
             ref="queryTable"
+            :is-quering="isQuering"
             :results="results"
             :tab-uid="tab.uid"
             :conn-uid="connection.uid"
@@ -272,6 +274,7 @@
 </template>
 
 <script setup lang="ts">
+import { getCurrentWindow, Menu } from '@electron/remote';
 import { Ace } from 'ace-builds';
 import { ConnectionParams } from 'common/interfaces/antares';
 import { uidGen } from 'common/libs/uidGen';
@@ -474,6 +477,8 @@ const runQuery = async (query: string) => {
          saveHistory(params);
          if (!autocommit.value)
             setUnsavedChanges({ uid: props.connection.uid, tUid: props.tabUid, isChanged: true });
+
+         queryEditor.value.editor.focus();
       }
       else
          addNotification({ status: 'error', message: response });
@@ -715,7 +720,7 @@ const openFile = async () => {
    const result = await Application.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'SQL', extensions: ['sql', 'txt'] }] });
    if (result && !result.canceled) {
       const file = result.filePaths[0];
-      const content = await Application.readFile(file);
+      const content = await Application.readFile({ filePath: file, encoding: 'utf-8' });
       const fileName = file.split('/').pop().split('\\').pop();
       if (props.tab.filePath && props.tab.filePath !== file) {
          newTab({
@@ -738,7 +743,11 @@ const openFile = async () => {
 
 const saveFileAs = async () => {
    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-   const result: any = await Application.showSaveDialog({ filters: [{ name: 'SQL', extensions: ['sql'] }], defaultPath: `${queryName.value || 'query'}.sql` });
+   const result: any = await Application.showSaveDialog({
+      filters: [{ name: 'SQL', extensions: ['sql'] }],
+      defaultPath: (queryName.value !== undefined && !queryName.value.includes('.sql') ? `${queryName.value}.sql` : queryName.value) || 'query.sql'
+   });
+
    if (result && !result.canceled) {
       await Application.writeFile(result.filePath, query.value);
       addNotification({ status: 'success', message: t('general.actionSuccessful', { action: t('application.saveFile') }) });
@@ -749,13 +758,17 @@ const saveFileAs = async () => {
 };
 
 const saveFile = async () => {
-   await Application.writeFile(filePath.value, query.value);
-   addNotification({ status: 'success', message: t('general.actionSuccessful', { action: t('application.saveFile') }) });
-   lastSavedQuery.value = toRaw(query.value);
+   if (filePath.value) {
+      await Application.writeFile(filePath.value, query.value);
+      addNotification({ status: 'success', message: t('general.actionSuccessful', { action: t('application.saveFile') }) });
+      lastSavedQuery.value = toRaw(query.value);
+   }
+   else
+      saveFileAs();
 };
 
 const loadFileContent = async (file: string) => {
-   const content = await Application.readFile(file);
+   const content = await Application.readFile({ filePath: file, encoding: 'utf-8' });
    query.value = content;
    lastSavedQuery.value = content;
 };
@@ -784,6 +797,67 @@ onMounted(() => {
 
    if (props.tab.filePath)
       loadFileContent(props.tab.filePath);
+
+   queryEditor.value.editor.container.addEventListener('contextmenu', (e) => {
+      const InputMenu = Menu.buildFromTemplate([
+         {
+            label: t('general.run'),
+            click: () => runQuery(query.value)
+         },
+         {
+            label: t('general.clear'),
+            click: () => clear()
+         },
+         {
+            type: 'separator'
+         },
+         {
+            label: t('application.saveFile'),
+            click: () => saveFile()
+         },
+         {
+            label: t('application.saveFileAs'),
+            click: () => saveFileAs()
+         },
+         {
+            label: t('application.openFile'),
+            click: () => openFile()
+         },
+         {
+            type: 'separator'
+         },
+         {
+            label: t('general.cut'),
+            role: 'cut'
+         },
+         {
+            label: t('general.copy'),
+            role: 'copy'
+         },
+         {
+            label: t('general.paste'),
+            role: 'paste'
+         },
+         {
+            type: 'separator'
+         },
+         {
+            label: t('general.selectAll'),
+            role: 'selectAll'
+         }
+      ]);
+      e.preventDefault();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let node: any = e.target;
+      while (node) {
+         if (node.nodeName.match(/^(input|textarea)$/i) || node.isContentEditable) {
+            InputMenu.popup({ window: getCurrentWindow() });
+            break;
+         }
+         node = node.parentNode;
+      }
+   });
 });
 
 onBeforeUnmount(() => {

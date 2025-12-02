@@ -49,16 +49,44 @@
                                  class="icon-box"
                                  :title="icon.name"
                                  :class="[{'selected': localConnection.icon === icon.code}]"
-                                 @click="localConnection.icon = icon.code"
+                                 @click="setIcon(icon.code)"
                               />
                               <div
                                  v-else
                                  class="icon-box"
                                  :title="icon.name"
-                                 :class="[`dbi dbi-${connection.client}`, {'selected': localConnection.icon === icon.code}]"
-                                 @click="localConnection.icon = icon.code"
+                                 :class="[`dbi dbi-${connection.client}`, {'selected': localConnection.icon === null}]"
+                                 @click="setIcon(null)"
                               />
                            </div>
+                        </div>
+                     </div>
+                     <div class="form-group">
+                        <div class="col-3">
+                           <label class="form-label">{{ t('application.customIcon') }}</label>
+                        </div>
+                        <div class="col-9 icons-wrapper">
+                           <div
+                              v-for="icon in customIcons"
+                              :key="icon.uid"
+                           >
+                              <BaseIcon
+                                 v-if="icon.uid"
+                                 :icon-name="icon.uid"
+                                 type="custom"
+                                 :size="36"
+                                 class="icon-box"
+                                 :class="[{'selected': localConnection.icon === icon.uid}]"
+                                 @click="setIcon(icon.uid, 'custom')"
+                                 @contextmenu.prevent="contextMenu($event, icon.uid)"
+                              />
+                           </div>
+                           <BaseIcon
+                              :icon-name="'mdiPlus'"
+                              :size="36"
+                              class="icon-box"
+                              @click="openFile"
+                           />
                         </div>
                      </div>
                   </form>
@@ -74,19 +102,46 @@
             </div>
          </div>
       </div>
+      <BaseContextMenu
+         v-if="isContext"
+         :context-event="contextEvent"
+         @close-context="isContext = false"
+      >
+         <div class="context-element" @click="removeIconHandler">
+            <span class="d-flex">
+               <BaseIcon
+                  class="text-light mt-1 mr-1"
+                  icon-name="mdiDelete"
+                  :size="18"
+               /> {{ t('general.delete') }}</span>
+         </div>
+      </BaseContextMenu>
    </Teleport>
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { onBeforeUnmount, PropType, Ref, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import BaseContextMenu from '@/components/BaseContextMenu.vue';
 import BaseIcon from '@/components/BaseIcon.vue';
 import { useFocusTrap } from '@/composables/useFocusTrap';
+import Application from '@/ipc-api/Application';
+import { camelize } from '@/libs/camelize';
 import { unproxify } from '@/libs/unproxify';
 import { SidebarElement, useConnectionsStore } from '@/stores/connections';
+import { useNotificationsStore } from '@/stores/notifications';
 
 const connectionsStore = useConnectionsStore();
+const { addNotification } = useNotificationsStore();
+
+const { addIcon, removeIcon, updateConnectionOrder, getConnectionName } = connectionsStore;
+const { customIcons } = storeToRefs(connectionsStore);
+
+const isContext = ref(false);
+const contextContent: Ref<string> = ref(null);
+const contextEvent: Ref<MouseEvent> = ref(null);
 
 const { t } = useI18n();
 
@@ -98,8 +153,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close']);
-
-const { updateConnectionOrder, getConnectionName } = connectionsStore;
 
 const icons = [
    { name: 'default', code: null },
@@ -160,14 +213,77 @@ const editFolderAppearance = () => {
    closeModal();
 };
 
-const camelize = (text: string) => {
-   const textArr = text.split('-');
-   for (let i = 0; i < textArr.length; i++) {
-      if (i === 0) continue;
-      textArr[i] = textArr[i].charAt(0).toUpperCase() + textArr[i].slice(1);
-   }
+const setIcon = (code: string, type?: 'mdi' | 'custom') => {
+   localConnection.value.icon = code;
+   localConnection.value.hasCustomIcon = type === 'custom';
+};
 
-   return textArr.join('');
+const removeIconHandler = () => {
+   if (localConnection.value.icon === contextContent.value) {
+      setIcon(null);
+      updateConnectionOrder(localConnection.value);
+   }
+   removeIcon(contextContent.value);
+   isContext.value = false;
+};
+
+const adjustSVGContent = (svgContent: string) => {
+   try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+
+      const parseError = doc.querySelector('parsererror');
+      if (parseError) {
+         addNotification({ status: 'error', message: parseError.textContent });
+         return null;
+      }
+
+      const svg = doc.documentElement;
+      if (svg.tagName.toLowerCase() !== 'svg') {
+         addNotification({ status: 'error', message: t('application.invalidFIle') });
+         return null;
+      }
+
+      if (!svg.hasAttribute('viewBox')) {
+         const width = svg.getAttribute('width') || '36';
+         const height = svg.getAttribute('height') || '36';
+         svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      }
+
+      svg.removeAttribute('width');
+      svg.removeAttribute('height');
+
+      const serializer = new XMLSerializer();
+      return serializer.serializeToString(svg);
+   }
+   catch (error) {
+      addNotification({ status: 'error', message: error.stack });
+      return null;
+   }
+};
+
+const openFile = async () => {
+   const result = await Application.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: '"SVG"', extensions: ['svg'] }]
+   });
+
+   if (result && !result.canceled) {
+      const file = result.filePaths[0];
+      let content = await Application.readFile({ filePath: file, encoding: 'utf-8' });
+
+      content = adjustSVGContent(content);
+
+      const base64Content = Buffer.from(content).toString('base64');
+
+      addIcon(base64Content);
+   }
+};
+
+const contextMenu = (event: MouseEvent, iconUid: string) => {
+   contextEvent.value = event;
+   contextContent.value = iconUid;
+   isContext.value = true;
 };
 
 const closeModal = () => emit('close');

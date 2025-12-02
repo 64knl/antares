@@ -18,7 +18,7 @@ export type Importer = MySQLImporter | PostgreSQLImporter
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface IpcResponse<T = any> {
-   status: 'success' | 'error';
+   status: 'success' | 'error' | 'abort';
    response?: T;
 }
 
@@ -34,6 +34,7 @@ export interface ClientParams {
       | { databasePath: string; readonly: boolean };
    poolSize?: number;
    logger?: () => void;
+   querySplitter?: (sql: string, clieng?: string) => string[];
 }
 
 /**
@@ -57,6 +58,7 @@ export interface ConnectionParams {
    cert?: string;
    key?: string;
    ca?: string;
+   connString?: string;
    untrustedConnection: boolean;
    ciphers?: string;
    ssh: boolean;
@@ -159,6 +161,13 @@ export interface TableForeign {
    oldName?: string;
 }
 
+export interface TableCheck {
+   // eslint-disable-next-line camelcase
+   _antares_id?: string;
+   name: string;
+   clause: string;
+}
+
 export interface CreateTableParams {
    /** Connection UID */
    uid?: string;
@@ -166,6 +175,7 @@ export interface CreateTableParams {
    fields: TableField[];
    foreigns: TableForeign[];
    indexes: TableIndex[];
+   checks?: TableCheck[];
    options: TableOptions;
 }
 
@@ -192,6 +202,11 @@ export interface AlterTableParams {
       additions: TableForeign[];
       changes: TableForeign[];
       deletions: TableForeign[];
+   };
+   checkChanges?: {
+      additions: TableCheck[];
+      changes: TableCheck[];
+      deletions: TableCheck[];
    };
    options: TableOptions;
 }
